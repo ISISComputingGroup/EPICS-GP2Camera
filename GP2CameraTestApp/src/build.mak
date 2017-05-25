@@ -24,6 +24,7 @@ $(APPNAME)_DBD += pvdump.dbd
 $(APPNAME)_DBD += asSupport.dbd
 $(APPNAME)_DBD += devIocStats.dbd
 $(APPNAME)_DBD += caPutLog.dbd
+$(APPNAME)_DBD += utilities.dbd
 ## add other dbd here ##
 $(APPNAME)_DBD += GP2Camera.dbd
 
@@ -38,8 +39,7 @@ $(APPNAME)_LIBS += autosave
 $(APPNAME)_LIBS += utilities
 ## Add other libraries here ##
 #$(APPNAME)_LIBS += xxx
-$(APPNAME)_LIBS += GP2Camera asyn oncrpc zlib libjson pcrecpp pcre pugixml
-$(APPNAME)_LIBS += NetShrVar
+$(APPNAME)_LIBS += GP2Camera NetShrVar asyn oncrpc zlib libjson pcrecpp pcre pugixml
 $(APPNAME)_LIBS += ffmpegServer
 $(APPNAME)_LIBS += avdevice
 $(APPNAME)_LIBS += avformat
@@ -58,6 +58,13 @@ $(APPNAME)_SRCS_vxWorks += -nil-
 # Add support from base/src/vxWorks if needed
 #$(APPNAME)_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
+ifneq ($(findstring windows,$(EPICS_HOST_ARCH)),)
+CVILIB = $(NETSHRVAR)/NetShrVarApp/src/O.$(EPICS_HOST_ARCH)/CVI/extlib/msvc64
+else
+CVILIB = $(NETSHRVAR)/NetShrVarApp/src/O.$(EPICS_HOST_ARCH)/CVI/extlib/msvc
+endif
+
+$(APPNAME)_SYS_LIBS_WIN32 += $(CVILIB)/cvinetv $(CVILIB)/cvisupp $(CVILIB)/cvirt
 $(APPNAME)_SYS_LIBS_WIN32 += wldap32 ws2_32 # advapi32 user32 msxml2
 
 # Finally link to the EPICS Base libraries
@@ -72,5 +79,4 @@ include $(TOP)/configure/RULES
 #=============================
 
 
-example_win32_LIBS += simDetector
 

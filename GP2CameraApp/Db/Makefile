@@ -10,7 +10,7 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------------------
 # Create and install (or just install) into <top>/db
 # databases, templates, substitutions like this
-DB += ADGP2Camera.db
+DB += ADGP2Camera.template
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

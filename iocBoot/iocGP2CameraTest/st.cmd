@@ -17,6 +17,9 @@ GP2CameraTest_registerRecordDeviceDriver pdbbase
 ##ISIS## Run IOC initialisation 
 < $(IOCSTARTUP)/init.cmd
 
+epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
+asynSetMinTimerPeriod(0.001)
+
 NetShrVarConfigure("nsv", "sec1", "$(TOP)/GP2CameraTestApp/src/netvarconfig.xml", 100, 0)
 GP2CameraConfigure("gp2", "nsv")
 dbLoadRecords("$(TOP)/db/ADGP2Camera.template","P=$(MYPVPREFIX),R=GP2:,PORT=gp2,ADDR=0,TIMEOUT=1")
@@ -28,6 +31,33 @@ dbLoadRecords("$(TOP)/db/ADGP2Camera.template","P=$(MYPVPREFIX),R=GP2:,PORT=gp2,
 
 ## Load our record instances
 dbLoadRecords("db/TestGP2Camera.db","P=$(MYPVPREFIX):GP2:")
+
+NDStdArraysConfigure("Image1", 3, 0, "gp2", 0, 0)
+
+# This waveform allows transporting 8-bit images
+# needs to fit in EPICS_CA_MAX_ARRAY_BYTES
+epicsEnvSet("EPICS_CA_MAX_ARRAY_BYTES",  "1000000")
+#
+dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:image1:,PORT=Image1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1")
+# This waveform allows transporting 32-bit images
+#dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=DAE:image1:,PORT=Image1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,TYPE=Int32,FTVL=LONG,NELEMENTS=12000000,ENABLED=1")
+
+## Create an FFT plugin
+#NDFFTConfigure("FFT1", 3, 0, "gp2", 0)
+#dbLoadRecords("NDFFT.template", "P=$(PREFIX),R=DAE:FFT1:,PORT=FFT1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),NAME=FFT1,NCHANS=2048")
+
+ffmpegServerConfigure(8081)
+## ffmpegStreamConfigure(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr, maxMemory)
+ffmpegStreamConfigure("C1.MJPG", 2, 0, "gp2", "0")
+dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegStream.template", "P=$(MYPVPREFIX),R=GP2:Stream:,PORT=C1.MJPG,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+
+## ffmpegFileConfigure(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr)
+ffmpegFileConfigure("C1.FILE", 16, 0, "gp2", 0)
+dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegFile.template", "P=$(MYPVPREFIX),R=GP2:File:,PORT=C1.FILE,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+
+NDPvaConfigure("PVA", 3, 0, "gp2", 0, "v4pvname")
+dbLoadRecords("NDPva.template", "P=$(MYPVPREFIX),R=GP2:V4:,PORT=PVA,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+
 
 ##ISIS## Stuff that needs to be done after all records are loaded but before iocInit is called 
 < $(IOCSTARTUP)/preiocinit.cmd

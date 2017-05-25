@@ -30,9 +30,5 @@ CHECK_RELEASE = YES
 #   a Microsoft FTP server say, or on some NFS configurations.
 #IOCS_APPL_TOP = </IOC's/absolute/path/to/install/top>
 
-# These allow developers to override the CONFIG_SITE variable
-# settings without having to modify the configure/CONFIG_SITE
-# file itself.
--include $(TOP)/../CONFIG_SITE.local
--include $(TOP)/configure/CONFIG_SITE.local
 
+include $(AREA_DETECTOR)/configure/CONFIG_SITE

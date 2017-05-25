@@ -8,7 +8,7 @@ include $(TOP)/configure/CONFIG
 # Build the IOC support library
 
 USR_INCLUDES += -I"$(TOP)/../../libraries/boost/include" -I"$(AREA_DETECTOR)"
-USR_CXXFLAGS += /EHa /DNOMINMAX
+USR_CXXFLAGS += /DNOMINMAX
 
 LIBRARY_IOC += GP2Camera
 GP2Camera_SRCS += GP2CameraDriver.cpp
