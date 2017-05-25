@@ -5,24 +5,30 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-#==================================================
-# build a support library
+# Build the IOC support library
+
+USR_INCLUDES += -I"$(TOP)/../../libraries/boost/include" -I"$(AREA_DETECTOR)"
+USR_CXXFLAGS += /EHa /DNOMINMAX
 
 LIBRARY_IOC += GP2Camera
+GP2Camera_SRCS += GP2CameraDriver.cpp
 
-# xxxRecord.h will be created from xxxRecord.dbd
-#DBDINC += xxxRecord
-# install GP2Camera.dbd into <top>/dbd
+GP2Camera_LIBS += asyn oncrpc utilities zlib pcrecpp pcre pugixml
+GP2Camera_LIBS += NetShrVar
+GP2Camera_LIBS += ffmpegServer
+GP2Camera_LIBS += avdevice
+GP2Camera_LIBS += avformat
+GP2Camera_LIBS += avcodec
+GP2Camera_LIBS += avutil
+GP2Camera_LIBS += swscale
+GP2Camera_LIBS += $(EPICS_BASE_IOC_LIBS)
+
 DBD += GP2Camera.dbd
 
-# specify all source files to be compiled and added to the library
-#GP2Camera_SRCS += xxx
-
-GP2Camera_LIBS += $(EPICS_BASE_IOC_LIBS)
+include $(ADCORE)/ADApp/commonLibraryMakefile
 
 #===========================
 
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-

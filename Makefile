@@ -11,6 +11,7 @@ endef
 $(foreach dir, $(filter-out configure,$(DIRS)),$(eval $(call DIR_template,$(dir))))
 
 iocBoot_DEPEND_DIRS += $(filter %App,$(DIRS))
+GP2CameraTestApp_DEPEND_DIRS += GP2CameraApp
 
 include $(TOP)/configure/RULES_TOP
 

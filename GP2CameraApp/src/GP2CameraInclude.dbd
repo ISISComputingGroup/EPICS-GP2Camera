@@ -1,0 +1,13 @@
+include "base.dbd"
+include "devSequencer.dbd"
+include "asyn.dbd"
+include "icpconfig.dbd"
+include "pvdump.dbd"
+include "asSupport.dbd"
+include "devIocStats.dbd"
+include "caPutLog.dbd"
+include "ADSupport.dbd"
+include "NDPluginSupport.dbd"
+include "ffmpegServer.dbd"
+include "NetShrVar.dbd"
+registrar("GP2CameraRegister")
