@@ -21,7 +21,7 @@ epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 asynSetMinTimerPeriod(0.001)
 
 NetShrVarConfigure("nsv", "sec1", "$(TOP)/GP2CameraTestApp/src/netvarconfig.xml", 100, 0)
-GP2CameraConfigure("gp2", "nsv", "array1", 1)
+GP2CameraConfigure("gp2", "nsv", "DATA", 1)
 dbLoadRecords("$(TOP)/db/ADGP2Camera.template","P=$(MYPVPREFIX),R=GP2:,PORT=gp2,ADDR=0,TIMEOUT=1")
 
 ## Load record instances
@@ -30,7 +30,7 @@ dbLoadRecords("$(TOP)/db/ADGP2Camera.template","P=$(MYPVPREFIX),R=GP2:,PORT=gp2,
 < $(IOCSTARTUP)/dbload.cmd
 
 ## Load our record instances
-dbLoadRecords("db/TestGP2Camera.db","P=$(MYPVPREFIX):GP2:")
+dbLoadRecords("db/TestGP2Camera.db","P=$(MYPVPREFIX)GP2:")
 
 NDStdArraysConfigure("Image1", 3, 0, "gp2", 0, 0)
 NDStdArraysConfigure("Image2", 3, 0, "gp2", 1, 0)

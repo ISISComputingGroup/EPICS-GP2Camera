@@ -33,6 +33,7 @@
 		  "fval" and "tval" are only used for boolean type, they are the strings to be displayed for false and true values
 		  "field" is only used for a structure type network shared variable, it indicates the structure element to access. Structures are read-only.
 	  -->
+	  <!--
 	  <param name="cont1" type="float64" access="BR,BW" netvar="//localhost/example/some_control" /> 
 	
 	  <param name="icont1" type="int32" access="R,W" netvar="//localhost/example/some_control" /> 
@@ -46,6 +47,17 @@
 	  <param name="array1" type="int16array" access="R,BW" netvar="//localhost/example/some_array" /> 
 
 	  <param name="struct1" type="float64" access="BR,BW" netvar="//localhost/example/some_struct" field="1" /> 
+	  -->
+
+	  <param name="INDICATOR" type="float64" access="R" netvar="//localhost/example/Rand" /> 
+	
+	  <param name="COMMAND" type="int32" access="R,W" netvar="//localhost/example/Command" /> 
+
+	  <param name="FILEPATH" type="string" access="R,W" netvar="//localhost/example/Write Path" /> 
+	 
+	  <param name="EXECUTE" type="boolean" access="R,W" netvar="//localhost/example/TestBoolean" /> 
+	  
+	  <param name="DATA" type="int16array" access="R" netvar="//localhost/example/some_array" /> 
 
 	</section>
   
