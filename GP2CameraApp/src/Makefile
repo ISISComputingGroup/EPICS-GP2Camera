@@ -10,6 +10,10 @@ include $(TOP)/configure/CONFIG
 USR_INCLUDES += -I"$(TOP)/../../libraries/boost/include" -I"$(AREA_DETECTOR)"
 USR_CXXFLAGS += /DNOMINMAX
 
+PROD_IOC += GP2FileReader
+GP2FileReader_SRCS += GP2FileReader.cpp
+GP2FileReader_LIBS += $(EPICS_BASE_IOC_LIBS)
+
 LIBRARY_IOC += GP2Camera
 GP2Camera_SRCS += GP2CameraDriver.cpp
 

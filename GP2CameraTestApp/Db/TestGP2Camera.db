@@ -1,23 +1,22 @@
 
-# Read Network shared variable "//localhost/example/some_array" 
 record(waveform, "$(P)NSVDATA_RBV")
 {
-    field(DESC, "NSV '//localhost/example/some_array'")
+    field(DESC, "NSV")
     field(DTYP, "asynInt16ArrayIn")
 	field(FTVL, "SHORT")
-	field(NELM, 1000)
+	field(NELM, 150000)
     field(INP,  "@asyn(gp2,0,0)NSVDATA")
     field(PREC, "3")
     field(SCAN, "I/O Intr")
+	field(TSE, -2)
 }
 
-# Write Network shared variable "//localhost/example/some_array" 
-record(waveform, "$(P)NSVDATA")
-{
-    field(DESC, "NSV '//localhost/example/some_array'")
-    field(DTYP, "asynInt16ArrayOut")
-	field(FTVL, "SHORT")
-	field(NELM, 1000)
-    field(INP,  "@asyn(gp2,0,0)NSVDATA")
-    field(PREC, "3")
-}
+#record(waveform, "$(P)NSVDATA")
+#{
+#    field(DESC, "NSV")
+#    field(DTYP, "asynInt16ArrayOut")
+#	field(FTVL, "SHORT")
+#	field(NELM, 150000)
+#    field(INP,  "@asyn(gp2,0,0)NSVDATA")
+#    field(PREC, "3")
+#}
