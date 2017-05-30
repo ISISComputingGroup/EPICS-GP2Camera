@@ -40,7 +40,9 @@ record(waveform, "$(P)TESTFILENAME:SP")
 	field(FTVL, "CHAR")
 	field(NELM, 256)
     field(INP,  "@asyn(gp2,0,0)TESTFILENAME")
+	field(PINI, YES)
 	info(archive, "VAL")
+    info(autosaveFields, "VAL")
 }
 
 record(waveform, "$(P)TESTFILENAME")
@@ -61,7 +63,9 @@ record(waveform, "$(P)FILEPATH:SP")
 	field(FTVL, "CHAR")
 	field(NELM, 256)
     field(INP,  "@asyn(nsv,0,0)FILEPATH")
+	field(PINI, YES)
 	info(archive, "VAL")
+    info(autosaveFields, "VAL")
 }
 
 record(waveform, "$(P)FILEPATH")
