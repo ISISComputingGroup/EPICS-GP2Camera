@@ -114,12 +114,19 @@ void GP2CameraDriver::nsvDataInterruptCallback(asynUser *pasynUser, epicsInt16 *
 		setTimeStamp(&(pasynUser->timestamp));
 	    doCallbacksInt16Array(value, nelements, P_nsvData, 0);
 	}
-	epicsInt16 *value_c = new epicsInt16[nelements];
-	memcpy(value_c, value, nelements * sizeof(epicsInt16));
-	DataQueueMessage message(value_c, nelements, pasynUser->timestamp);
-	if (m_data_queue.trySend(&message, sizeof(DataQueueMessage)) != 0)
+	if (nelements % 3 == 0) // expecting a sequence of (x,y,t)
 	{
-		std::cerr << "Unable to queue message" << std::endl;
+	    epicsInt16 *value_c = new epicsInt16[nelements];
+	    memcpy(value_c, value, nelements * sizeof(epicsInt16));
+	    DataQueueMessage message(value_c, nelements, pasynUser->timestamp);
+	    if (m_data_queue.trySend(&message, sizeof(DataQueueMessage)) != 0)
+	    {
+		    std::cerr << "Unable to queue message" << std::endl;
+	    }
+	}
+	else
+	{
+		std::cerr << "Number of data elements " << nelements << " is not a multiple of 3" << std::endl;		
 	}
 }
 
@@ -601,7 +608,7 @@ int GP2CameraDriver::computeArray(epicsInt16* value, size_t nelements, int sizeX
 	{
 		xi = value[i];
 		yi = value[i+1];
-		if (xi < sizeX && yi < sizeY)
+		if (xi >= 0 && xi < sizeX && yi >= 0 && yi < sizeY)
 		{
 			switch (colorMode) {
 			case NDColorModeMono:
