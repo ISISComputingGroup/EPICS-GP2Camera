@@ -20,8 +20,10 @@ GP2CameraTest_registerRecordDeviceDriver pdbbase
 epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 asynSetMinTimerPeriod(0.001)
 
-NetShrVarConfigure("nsv", "sec1", "$(TOP)/GP2CameraTestApp/src/netvarconfig.xml", 100, 0)
-GP2CameraConfigure("gp2", "nsv", "DATA", 1)
+NetShrVarConfigure("nsv", "sec1", "$(TOP)/GP2CameraTestApp/src/netvarconfig.xml", 50, 0)
+#GP2CameraConfigure("gp2", "nsv", "DATA", 1)
+GP2CameraConfigure("gp2", "nsv", "DATA", 0)
+
 dbLoadRecords("$(TOP)/db/ADGP2Camera.template","P=$(MYPVPREFIX),R=GP2:,PORT=gp2,ADDR=0,TIMEOUT=1")
 
 ## Load record instances

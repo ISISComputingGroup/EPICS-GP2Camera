@@ -148,7 +148,7 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
                     0, /* Default priority */
                     0),	/* Default stack size*/
 					m_pRaw(NULL), m_options(options), m_old_acquiring(0), m_data_queue(20, sizeof(DataQueueMessage)),
-					m_outfile(NULL)
+					m_outfile(NULL),m_filename("")
 {					
 	int status;
     const char *functionName = "GP2CameraDriver";
@@ -227,8 +227,11 @@ void GP2CameraDriver::pollerThread1()
 			getIntegerParam(ADAcquire, &acquiring);
 			if (acquiring == 0 && m_outfile != NULL)
 			{
+			    m_old_acquiring = acquiring;
+				std::cerr << "Closing \"" << m_filename << "\"" << std::endl;
 				fclose(m_outfile);
 				m_outfile = NULL;
+				m_filename = "";
 			}
 			unlock();
 		}			
@@ -269,8 +272,10 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 			m_old_acquiring = acquiring;
 			if (m_outfile != NULL)
 			{
+			    std::cerr << "Closing \"" << m_filename << "\"" << std::endl;
 				fclose(m_outfile);
 				m_outfile = NULL;
+				m_filename = "";
 			}
 			unlock();
 //			epicsThreadSleep( acquirePeriod + (enable == 0 ? 1.0 : 0.0) );
@@ -281,6 +286,15 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
             setIntegerParam(ADNumImagesCounter, 0);
 			m_old_acquiring = acquiring;
 			m_outfile = fopen(filename, "wb");
+			if (m_outfile == NULL)
+			{
+			    std::cerr << "ERROR: Cannot open file \"" << filename << "\"" << std::endl;
+			}
+			else
+			{
+			    std::cerr << "Opened \"" << filename << "\"" << std::endl;
+			    m_filename = filename;
+			}
         }
         setIntegerParam(ADStatus, ADStatusAcquire); 
 		epicsTimeGetCurrent(&startTime);
@@ -337,7 +351,10 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 			fwrite(&imageCounter, sizeof(int), 1, m_outfile);
 			fwrite(&numImagesCounter, sizeof(int), 1, m_outfile);
 			fwrite(&nelements, sizeof(size_t), 1, m_outfile);
-			fwrite(value, sizeof(epicsInt16), nelements, m_outfile);
+			if (fwrite(value, sizeof(epicsInt16), nelements, m_outfile) != nelements)
+			{
+			    std::cerr << "ERROR: cannot write to file" << std::endl;
+			}
 			if (numImagesCounter % 10 == 0)
 			{
 				fflush(m_outfile);

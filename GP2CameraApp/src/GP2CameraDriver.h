@@ -36,6 +36,7 @@ private:
 	int m_options;
 	int m_old_acquiring;
 	FILE* m_outfile;
+	std::string m_filename;
 	struct DataQueueMessage
 	{
 		epicsInt16 *value;
