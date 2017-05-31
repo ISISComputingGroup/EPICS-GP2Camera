@@ -12,8 +12,20 @@ int main(int argc, char* argv[])
 	char tbuffer[60];
 //	epicsTimeToStrftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S.%06f", epicsTS);
 
-
+    bool display = false;
     FILE* infile = fopen(argv[1], "rb");
+	if (infile == NULL)
+	{
+	    std::cerr << "Cannot open file " << argv[1] << std::endl;
+		return -1;
+	}
+	const char* opts = "";
+	if (argc > 2)
+	{
+	    opts = argv[2];
+	}
+	display = (strchr(opts, 'd') != NULL);
+	int frames = 0, nevents = 0;
     while(true)
 	{
 			if (fread(&epicsTS, sizeof(epicsTimeStamp), 1, infile) != 1)
@@ -28,17 +40,23 @@ int main(int argc, char* argv[])
 			value = new epicsInt16[nelements];
 			if (fread(value, sizeof(epicsInt16), nelements, infile) != nelements)
 			    break;
-			for(int i=0; i<nelements; i += 3)
+			++frames;
+			nevents += nelements;
+			if (display)
 			{
-				std::cout << tbuffer << "," << numImagesCounter;
-				for(int j=0; j<3; ++j)
-				{
-				    std::cout << "," << value[i+j];	
-				}					
-			    std::cout << std::endl;
+			    for(int i=0; i<nelements; i += 3)
+			    {
+				    std::cout << tbuffer << "," << numImagesCounter;
+				    for(int j=0; j<3; ++j)
+				    {
+				        std::cout << "," << value[i+j];	
+				    }					
+			        std::cout << std::endl;
+				}
 			}
 			delete[] value;
 	}
     fclose(infile);
+	std::cerr << "Frames = " << frames << ", events = " << nevents << ", imagesCounter = " << numImagesCounter << std::endl;
 	return 0;
 }
