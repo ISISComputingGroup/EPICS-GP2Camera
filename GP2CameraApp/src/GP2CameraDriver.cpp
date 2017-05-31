@@ -11,6 +11,8 @@
 #include <numeric>
 #include <boost/algorithm/string.hpp>
 
+#include <windows.h>
+
 #include <epicsTypes.h>
 #include <epicsTime.h>
 #include <epicsThread.h>
@@ -225,13 +227,17 @@ void GP2CameraDriver::pollerThread1()
 		{
 			lock();
 			getIntegerParam(ADAcquire, &acquiring);
-			if (acquiring == 0 && m_outfile != NULL)
+			if (acquiring == 0)
 			{
 			    m_old_acquiring = acquiring;
-				std::cerr << "Closing \"" << m_filename << "\"" << std::endl;
-				fclose(m_outfile);
-				m_outfile = NULL;
-				m_filename = "";
+				if (m_outfile != NULL)
+				{
+				    std::cerr << "Closing \"" << m_filename << "\"" << std::endl;
+				    fclose(m_outfile);
+				    m_outfile = NULL;
+					SetFileAttributes(m_filename.c_str(), FILE_ATTRIBUTE_READONLY);
+				    m_filename = "";
+				}
 			}
 			unlock();
 		}			
@@ -275,6 +281,7 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 			    std::cerr << "Closing \"" << m_filename << "\"" << std::endl;
 				fclose(m_outfile);
 				m_outfile = NULL;
+				SetFileAttributes(m_filename.c_str(), FILE_ATTRIBUTE_READONLY);
 				m_filename = "";
 			}
 			unlock();
@@ -355,7 +362,7 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 			{
 			    std::cerr << "ERROR: cannot write to file" << std::endl;
 			}
-			if (numImagesCounter % 10 == 0)
+			if (numImagesCounter % 30 == 0)
 			{
 				fflush(m_outfile);
 			}
