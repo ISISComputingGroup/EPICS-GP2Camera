@@ -116,10 +116,10 @@ record(longin, "$(P)_EXECUTE")
     field(SCAN, "I/O Intr")
 }
 
-record(ai, "$(P)INDICATOR")
-{
-    field(DTYP, "asynFloat64")
-    field(INP,  "@asyn(nsv,0,0)INDICATOR")
-    field(SCAN, "I/O Intr")
-	field(PREC, 1)
-}
+#record(ai, "$(P)INDICATOR")
+#{
+#    field(DTYP, "asynFloat64")
+#    field(INP,  "@asyn(nsv,0,0)INDICATOR")
+#    field(SCAN, "I/O Intr")#
+#	field(PREC, 1)
+#}

@@ -49,15 +49,15 @@
 	  <param name="struct1" type="float64" access="BR,BW" netvar="//localhost/example/some_struct" field="1" /> 
 	  -->
 
-	  <param name="INDICATOR" type="float64" access="R" netvar="//localhost/example/Rand" /> 
+	  <!--param name="INDICATOR" type="float64" access="R" netvar="//ndw1223/ibex/Rand" /--> 
 	
-	  <param name="COMMAND" type="int32" access="R,W" netvar="//localhost/example/Command" /> 
+	  <param name="COMMAND" type="int32" access="R,W" netvar="//ndw1223/ibex/Command" /> 
 
-	  <param name="FILEPATH" type="string" access="R,W" netvar="//localhost/example/Write Path" /> 
+	  <param name="FILEPATH" type="string" access="R,W" netvar="//ndw1223/ibex/Stringpath" /> 
 	 
-	  <param name="EXECUTE" type="boolean" access="R,W" netvar="//localhost/example/TestBoolean" /> 
+	  <param name="EXECUTE" type="boolean" access="R,W" netvar="//ndw1223/ibex/Execute" /> 
 	  
-	  <param name="DATA" type="int16array" access="R" netvar="//localhost/example/some_array" /> 
+	  <param name="DATA" type="int16array" access="R" netvar="//ndw1223/ibex/GP2Data" /> 
 
 	</section>
   
