@@ -15,18 +15,20 @@ PROD_IOC_WIN32 = $(APPNAME)
 # isisdaeTest.dbd will be created and installed
 DBD += $(APPNAME).dbd
 
-# isisdaeTest.dbd will be made up from these files:
-$(APPNAME)_DBD += base.dbd
+PROD_NAME = $(APPNAME)
+include $(ADCORE)/ADApp/commonDriverMakefile
+
+# we get base, asyn + areadetetor standard plugins as part of commonDriverMakefile include
 ## ISIS standard dbd ##
 $(APPNAME)_DBD += devSequencer.dbd
 $(APPNAME)_DBD += icpconfig.dbd
 $(APPNAME)_DBD += pvdump.dbd
-$(APPNAME)_DBD += asSupport.dbd
-$(APPNAME)_DBD += devIocStats.dbd
 $(APPNAME)_DBD += caPutLog.dbd
 $(APPNAME)_DBD += utilities.dbd
 ## add other dbd here ##
 $(APPNAME)_DBD += GP2Camera.dbd
+$(APPNAME)_DBD += ffmpegServer.dbd
+$(APPNAME)_DBD += NetShrVar.dbd
 
 # Add all the support libraries needed by this IOC
 ## ISIS standard libraries ##
@@ -46,7 +48,6 @@ $(APPNAME)_LIBS += avformat
 $(APPNAME)_LIBS += avcodec
 $(APPNAME)_LIBS += avutil
 $(APPNAME)_LIBS += swscale
-
 
 # isisdaeTest_registerRecordDeviceDriver.cpp derives from isisdaeTest.dbd
 $(APPNAME)_SRCS += $(APPNAME)_registerRecordDeviceDriver.cpp
@@ -69,9 +70,6 @@ $(APPNAME)_SYS_LIBS_WIN32 += wldap32 ws2_32 # advapi32 user32 msxml2
 
 # Finally link to the EPICS Base libraries
 $(APPNAME)_LIBS += $(EPICS_BASE_IOC_LIBS)
-
-PROD_NAME = $(APPNAME)
-include $(ADCORE)/ADApp/commonDriverMakefile
 
 include $(TOP)/configure/RULES
 #----------------------------------------
