@@ -593,7 +593,7 @@ int GP2CameraDriver::computeArray(epicsInt16* value, size_t nelements, int sizeX
     int columnStep=0, rowStep=0, colorMode;
     int status = asynSuccess;
     double exposureTime, gain;
-    int i, k;
+    int i, j, k;
 	
     status = getDoubleParam (ADGain,        &gain);
     status = getIntegerParam(NDColorMode,   &colorMode);
@@ -645,6 +645,25 @@ int GP2CameraDriver::computeArray(epicsInt16* value, size_t nelements, int sizeX
 				++(pRed[k]);
 				++(pGreen[k]);
 				++(pBlue[k]);
+				break;
+			}
+		}
+	}
+	for(i=0; i< sizeX; ++i)
+	{
+		for(j=0; j< sizeY; ++j)
+		{
+			switch (colorMode) {
+			case NDColorModeMono:
+				pMono[j * sizeX + i] = static_cast<epicsType>(gain * pMono[j * sizeX + i] + 0.5);
+				break;
+			case NDColorModeRGB1:
+			case NDColorModeRGB2:
+			case NDColorModeRGB3:
+				k = columnStep * (j * sizeX + i) + j * rowStep;
+				pRed[k] = static_cast<epicsType>(gain * pRed[k] + 0.5);
+				pGreen[k] = static_cast<epicsType>(gain * pGreen[k] + 0.5);
+				pBlue[k] = static_cast<epicsType>(gain * pBlue[k] + 0.5);
 				break;
 			}
 		}

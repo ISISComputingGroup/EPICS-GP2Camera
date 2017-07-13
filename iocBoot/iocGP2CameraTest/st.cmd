@@ -51,10 +51,18 @@ dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:image2:,PORT=Image2
 #NDFFTConfigure("FFT1", 3, 0, "gp2", 0)
 #dbLoadRecords("NDFFT.template", "P=$(PREFIX),R=DAE:FFT1:,PORT=FFT1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),NAME=FFT1,NCHANS=2048")
 
+NDProcessConfigure("PROC", 3, 0, "gp2", 0)
+dbLoadRecords("NDProcess.template", "P=$(MYPVPREFIX),R=GP2:PROC:,PORT=PROC,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+
+NDColorConvertConfigure("COL", 3, 0, "PROC", 0)
+dbLoadRecords("NDColorConvert.template","P=$(MYPVPREFIX),R=GP2:COL:,PORT=COL,ADDR=0,TIMEOUT=1,NDARRAY_PORT=PROC,ENABLED=1")  
+
 ffmpegServerConfigure(8081)
 ## ffmpegStreamConfigure(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr, maxMemory)
-ffmpegStreamConfigure("C1.MJPG", 2, 0, "gp2", "0")
-dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegStream.template", "P=$(MYPVPREFIX),R=GP2:Stream:,PORT=C1.MJPG,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+#ffmpegStreamConfigure("C1.MJPG", 2, 0, "gp2", "0")
+#dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegStream.template", "P=$(MYPVPREFIX),R=GP2:Stream:,PORT=C1.MJPG,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+ffmpegStreamConfigure("C1.MJPG", 2, 0, "COL", "0")
+dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegStream.template", "P=$(MYPVPREFIX),R=GP2:Stream:,PORT=C1.MJPG,ADDR=0,TIMEOUT=1,NDARRAY_PORT=COL,ENABLED=1")
 
 ## ffmpegFileConfigure(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr)
 ffmpegFileConfigure("C1.FILE", 16, 0, "gp2", 0)
@@ -63,8 +71,6 @@ dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegFile.template", "P=$(MYPVPREFIX),R=GP2:F
 NDPvaConfigure("PVA", 3, 0, "gp2", 0, "v4pvname")
 dbLoadRecords("NDPva.template", "P=$(MYPVPREFIX),R=GP2:V4:,PORT=PVA,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
 
-NDProcessConfigure("PROC", 3, 0, "gp2", 0)
-dbLoadRecords("NDProcess.template", "P=$(MYPVPREFIX),R=GP2:PROC:,PORT=PROC,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
 
 NDStdArraysConfigure("ImageSum", 3, 0, "PROC", 0, 0)
 dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:imageSum:,PORT=ImageSum,ADDR=0,TIMEOUT=1,NDARRAY_PORT=PROC,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1")
