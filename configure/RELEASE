@@ -2,6 +2,7 @@
 AREA_DETECTOR=$(SUPPORT)/areaDetector/master
 ASYN=$(SUPPORT)/asyn/master
 AUTOSAVE=$(SUPPORT)/autosave/master
+BUSY=$(SUPPORT)/busy/master
 BOOST=$(EPICS_ROOT)/libraries/master/boost
 CALC=$(SUPPORT)/calc/master
 CAPUTLOG=$(SUPPORT)/caPutLog/master
@@ -24,9 +25,10 @@ ZLIB=$(SUPPORT)/zlib/master
 # optional extra local definitions here
 -include $(TOP)/configure/RELEASE.private
 
-include $(TOP)/../../../ISIS_CONFIG
--include $(TOP)/../../../ISIS_CONFIG.$(EPICS_HOST_ARCH)
 
 include $(AREA_DETECTOR)/configure/RELEASE_LIBS.local
 include $(AREA_DETECTOR)/configure/RELEASE.local
 -include $(AREA_DETECTOR)/configure/RELEASE.local.$(EPICS_HOST_ARCH)
+
+include $(TOP)/../../../ISIS_CONFIG
+-include $(TOP)/../../../ISIS_CONFIG.$(EPICS_HOST_ARCH)

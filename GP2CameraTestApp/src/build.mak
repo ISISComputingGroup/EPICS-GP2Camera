@@ -41,7 +41,7 @@ $(APPNAME)_LIBS += autosave
 $(APPNAME)_LIBS += utilities
 ## Add other libraries here ##
 #$(APPNAME)_LIBS += xxx
-$(APPNAME)_LIBS += GP2Camera NetShrVar asyn oncrpc zlib libjson pcrecpp pcre pugixml
+$(APPNAME)_LIBS += GP2Camera NetShrVar busy asyn oncrpc zlib libjson pcrecpp pcre pugixml
 $(APPNAME)_LIBS += ffmpegServer
 $(APPNAME)_LIBS += avdevice
 $(APPNAME)_LIBS += avformat
