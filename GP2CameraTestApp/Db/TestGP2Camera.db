@@ -104,7 +104,8 @@ record(mbbi, "$(P)COMMAND")
 
 record(longout, "$(P)_EXECUTE:SP")
 {
-    field(VAL, 1)
+    field(DOL, "1")
+	field(OMSL, "closed_loop")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn(nsv,0,0)EXECUTE")
 }
