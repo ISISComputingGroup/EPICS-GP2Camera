@@ -68,6 +68,7 @@ void GP2CameraDriver::setADAcquire(int acquire)
       }
 }
 
+
 #if 0
 
 asynStatus isisdaeDriver::readInt32Array(asynUser *pasynUser, epicsInt32 *value, size_t nElements, size_t *nIn)
@@ -150,12 +151,14 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
                     0, /* Default priority */
                     0),	/* Default stack size*/
 					m_pRaw(NULL), m_options(options), m_old_acquiring(0), m_data_queue(20, sizeof(DataQueueMessage)),
-					m_outfile(NULL),m_filename("")
+					m_outfile(NULL),m_filename(""), m_nsvDataClient(0)
 {					
 	int status;
     const char *functionName = "GP2CameraDriver";
-
-	m_nsvDataClient = new NSVDataClient(this, nsvPortName, 0, nsvParam);
+	if (nsvParam != NULL && *nsvParam != '\0')
+	{
+		m_nsvDataClient = new NSVDataClient(this, nsvPortName, 0, nsvParam);
+	}
 	createParam(P_nsvDataString, asynParamInt16Array, &P_nsvData);
 	createParam(P_testFileNameString, asynParamOctet, &P_testFileName);
     setStringParam(P_testFileName, "test.out");
@@ -251,7 +254,49 @@ asynStatus GP2CameraDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 	{
 		return ADDriver::writeInt32(pasynUser, value);
 	}
-	return asynSuccess;	
+	else
+	{
+		return asynPortDriver::writeInt32(pasynUser, value);
+	}
+}
+
+asynStatus GP2CameraDriver::readInt32(asynUser *pasynUser, epicsInt32* value)
+{
+	int function = pasynUser->reason;
+	if (function < FIRST_GP2CAM_PARAM)
+	{
+		return ADDriver::readInt32(pasynUser, value);
+	}
+	else
+	{
+		return asynPortDriver::readInt32(pasynUser, value);
+	}
+}
+
+asynStatus GP2CameraDriver::writeOctet(asynUser *pasynUser, const char *value, size_t maxChars, size_t *nActual)
+{
+	int function = pasynUser->reason;
+	if (function < FIRST_GP2CAM_PARAM)
+	{
+		return ADDriver::writeOctet(pasynUser, value, maxChars, nActual);
+	}
+	else
+	{
+		return asynPortDriver::writeOctet(pasynUser, value, maxChars, nActual);
+	}
+}
+
+asynStatus GP2CameraDriver::readOctet(asynUser *pasynUser, char *value, size_t maxChars, size_t *nActual, int *eomReason)
+{
+	int function = pasynUser->reason;
+	if (function < FIRST_GP2CAM_PARAM)
+	{
+		return ADDriver::readOctet(pasynUser, value, maxChars, nActual, eomReason);
+	}
+	else
+	{
+		return asynPortDriver::readOctet(pasynUser, value, maxChars, nActual, eomReason);
+	}
 }
 
 void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epicsTimeStamp* epicsTS)
