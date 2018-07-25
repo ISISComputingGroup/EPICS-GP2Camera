@@ -102,9 +102,14 @@ record(mbbi, "$(P)COMMAND")
     field(SCAN, "I/O Intr")
 }
 
+record(longin, "$(P)_EXECUTE:ONE")
+{
+    field(VAL, "1")
+}
+
 record(longout, "$(P)_EXECUTE:SP")
 {
-    field(DOL, "1")
+    field(DOL, "$(P)_EXECUTE:ONE")
 	field(OMSL, "closed_loop")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn(nsv,0,0)EXECUTE")
