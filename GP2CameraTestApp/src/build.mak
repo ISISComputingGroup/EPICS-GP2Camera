@@ -20,7 +20,6 @@ include $(ADCORE)/ADApp/commonDriverMakefile
 
 # we get base, asyn + areadetetor standard plugins as part of commonDriverMakefile include
 ## ISIS standard dbd ##
-$(APPNAME)_DBD += devSequencer.dbd
 $(APPNAME)_DBD += icpconfig.dbd
 $(APPNAME)_DBD += pvdump.dbd
 $(APPNAME)_DBD += caPutLog.dbd
