@@ -1,0 +1,33 @@
+global { P="\$(P)", PORT=gp2, SCAN="I/O Intr", ZNAME="", ONAME="" }
+
+file "$(NETSHRVAR)/db/NetShrVar_boolean.template"
+{
+   pattern { PARAM, RPARAM, SPARAM }
+   { "DIODE:RESET:1", "DiodeReset1", "DiodeReset1" }
+   { "DIODE:RESET:2", "DiodeReset2", "DiodeReset2" }
+   { "DIODE:RESET:3", "DiodeReset3", "DiodeReset3" }
+   { "DIODE:RESET:4", "DiodeReset4", "DiodeReset4" }
+   { "DIODE:RESET:5", "DiodeReset5", "DiodeReset5"}
+}
+
+file "$(NETSHRVAR)/db/NetShrVar_int32.template"
+{
+   pattern { PARAM, RPARAM, SPARAM }
+   { "ICOMPTRIM:MSB", "iCompTrimMSB", "iCompTrimMSB" }
+   { "ICOMPTRIM:LSB", "iCompTrimLSB", "iCompTrimLSB" }
+   { "DURATION:1", "Duration1", "Duration1" }
+   { "DURATION:2", "Duration2", "Duration2" }
+   { "DURATION:3", "Duration3", "Duration3" }
+   { "DURATION:4", "Duration4", "Duration4" }
+   { "DURATION:5", "Duration5", "Duration5" }
+   { "PAUSE:1", "Pause1", "Pause1" }
+   { "PAUSE:2", "Pause2", "Pause2" }
+   { "PAUSE:3", "Pause2", "Pause3" }
+   { "PAUSE:4", "Pause4", "Pause4" }
+   { "PAUSE:5", "Pause5", "Pause5" }
+   { "LASTTIMECODE:1", "LastTimecode1", "LastTimecode1" }
+   { "LASTTIMECODE:2", "LastTimecode2", "LastTimecode2" }
+   { "LASTTIMECODE:3", "LastTimecode3", "LastTimecode3" }
+   { "LASTTIMECODE:4", "LastTimecode4", "LastTimecode4" }
+   { "LASTTIMECODE:5", "LastTimecode5", "LastTimecode5" }
+}

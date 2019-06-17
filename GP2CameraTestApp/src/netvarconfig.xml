@@ -33,31 +33,58 @@
 		  "fval" and "tval" are only used for boolean type, they are the strings to be displayed for false and true values
 		  "field" is only used for a structure type network shared variable, it indicates the structure element to access. Structures are read-only.
 	  -->
-	  <!--
-	  <param name="cont1" type="float64" access="BR,BW" netvar="//localhost/example/some_control" /> 
 	
-	  <param name="icont1" type="int32" access="R,W" netvar="//localhost/example/some_control" /> 
+	  <param name="COMMAND" type="int32" access="R,W" netvar="//ndw1958/ibex/Command" /> 
 
-      <param name="ind1" type="int32" access="R,BW" netvar="//localhost/example/some_indicator" />
-
-	  <param name="strcont1" type="string" access="BR,BW" netvar="//localhost/example/some_string" /> 
+	  <param name="FILEPATH" type="string" access="R,W" netvar="//ndw1958/ibex/Stringpath" /> 
 	 
-	  <param name="bool1" type="boolean" fval="off" tval="on" access="BR,BW" netvar="//localhost/example/some_bool" /> 
+	  <param name="EXECUTE" type="boolean" access="R,W" netvar="//ndw1958/ibex/Execute" /> 
 	  
-	  <param name="array1" type="int16array" access="R,BW" netvar="//localhost/example/some_array" /> 
+	  <param name="DATA" type="int16array" access="R" netvar="//ndw1958/ibex/GP2Data" /> 
 
-	  <param name="struct1" type="float64" access="BR,BW" netvar="//localhost/example/some_struct" field="1" /> 
-	  -->
+	  <param name="DiodeReset1" type="boolean" access="R,W" netvar="//ndw1958/ibex/DiodeReset1" /> 
 
-	  <!--param name="INDICATOR" type="float64" access="R" netvar="//ndw1223/ibex/Rand" /--> 
-	
-	  <param name="COMMAND" type="int32" access="R,W" netvar="//ndw1223/ibex/Command" /> 
+	  <param name="DiodeReset2" type="boolean" access="R,W" netvar="//ndw1958/ibex/DiodeReset2" /> 
 
-	  <param name="FILEPATH" type="string" access="R,W" netvar="//ndw1223/ibex/Stringpath" /> 
-	 
-	  <param name="EXECUTE" type="boolean" access="R,W" netvar="//ndw1223/ibex/Execute" /> 
-	  
-	  <param name="DATA" type="int16array" access="R" netvar="//ndw1223/ibex/GP2Data" /> 
+	  <param name="DiodeReset3" type="boolean" access="R,W" netvar="//ndw1958/ibex/DiodeReset3" /> 
+
+	  <param name="DiodeReset4" type="boolean" access="R,W" netvar="//ndw1958/ibex/DiodeReset4" /> 
+
+	  <param name="DiodeReset5" type="boolean" access="R,W" netvar="//ndw1958/ibex/DiodeReset5" /> 
+
+	  <param name="Duration1" type="int32" access="R,W" netvar="//ndw1958/ibex/Duration1" /> 
+
+	  <param name="Duration2" type="int32" access="R,W" netvar="//ndw1958/ibex/Duration2" /> 
+
+	  <param name="Duration3" type="int32" access="R,W" netvar="//ndw1958/ibex/Duration3" /> 
+
+	  <param name="Duration4" type="int32" access="R,W" netvar="//ndw1958/ibex/Duration4" /> 
+
+	  <param name="Duration5" type="int32" access="R,W" netvar="//ndw1958/ibex/Duration5" /> 
+
+	  <param name="LastTimecode1" type="int32" access="R,W" netvar="//ndw1958/ibex/LastTimecode1" /> 
+
+	  <param name="LastTimecode2" type="int32" access="R,W" netvar="//ndw1958/ibex/LastTimecode2" /> 
+
+	  <param name="LastTimecode3" type="int32" access="R,W" netvar="//ndw1958/ibex/LastTimecode3" /> 
+
+	  <param name="LastTimecode4" type="int32" access="R,W" netvar="//ndw1958/ibex/LastTimecode4" /> 
+
+	  <param name="LastTimecode5" type="int32" access="R,W" netvar="//ndw1958/ibex/LastTimecode5" /> 
+
+	  <param name="Pause1" type="int32" access="R,W" netvar="//ndw1958/ibex/Pause1" /> 
+
+	  <param name="Pause2" type="int32" access="R,W" netvar="//ndw1958/ibex/Pause2" /> 
+
+	  <param name="Pause3" type="int32" access="R,W" netvar="//ndw1958/ibex/Pause3" /> 
+
+	  <param name="Pause4" type="int32" access="R,W" netvar="//ndw1958/ibex/Pause4" /> 
+
+	  <param name="Pause5" type="int32" access="R,W" netvar="//ndw1958/ibex/Pause5" /> 
+
+	  <param name="iCompTrimLSB" type="int32" access="R,W" netvar="//ndw1958/ibex/iCompTrimLSB" /> 
+
+	  <param name="iCompTrimMSB" type="int32" access="R,W" netvar="//ndw1958/ibex/iCompTrimMSB" /> 
 
 	</section>
   

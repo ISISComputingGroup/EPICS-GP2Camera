@@ -33,6 +33,7 @@ dbLoadRecords("$(TOP)/db/ADGP2Camera.template","P=$(MYPVPREFIX),R=GP2:,PORT=gp2,
 
 ## Load our record instances
 dbLoadRecords("db/TestGP2Camera.db","P=$(MYPVPREFIX)GP2:")
+dbLoadRecords("db/GP2extra.db","P=$(MYPVPREFIX)GP2:")
 
 NDStdArraysConfigure("Image1", 3, 0, "gp2", 0, 0)
 NDStdArraysConfigure("Image2", 3, 0, "gp2", 1, 0)
