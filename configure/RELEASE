@@ -1,4 +1,3 @@
-AREA_DETECTOR=$(SUPPORT)/areaDetector/master
 ASYN=$(SUPPORT)/asyn/master
 AUTOSAVE=$(SUPPORT)/autosave/master
 BUSY=$(SUPPORT)/busy/master
@@ -19,6 +18,9 @@ SQLITE=$(SUPPORT)/sqlite/master
 SSCAN=$(SUPPORT)/sscan/master
 UTILITIES=$(SUPPORT)/utilities/master
 ZLIB=$(SUPPORT)/zlib/master
+
+AREA_DETECTOR=$(SUPPORT)/areaDetector/master
+FFMPEGSERVER=$(AREA_DETECTOR)/ffmpegServer
 
 # optional extra local definitions here
 -include $(TOP)/configure/RELEASE.private
