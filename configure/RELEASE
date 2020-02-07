@@ -1,4 +1,3 @@
-AREA_DETECTOR=$(SUPPORT)/areaDetector/master
 ASYN=$(SUPPORT)/asyn/master
 AUTOSAVE=$(SUPPORT)/autosave/master
 BUSY=$(SUPPORT)/busy/master
@@ -20,13 +19,15 @@ SSCAN=$(SUPPORT)/sscan/master
 UTILITIES=$(SUPPORT)/utilities/master
 ZLIB=$(SUPPORT)/zlib/master
 
+AREA_DETECTOR=$(SUPPORT)/areaDetector/master
+FFMPEGSERVER=$(AREA_DETECTOR)/ffmpegServer
+
 # optional extra local definitions here
 -include $(TOP)/configure/RELEASE.private
 
 include $(TOP)/../../../ISIS_CONFIG
 -include $(TOP)/../../../ISIS_CONFIG.$(EPICS_HOST_ARCH)
 
+include $(AREA_DETECTOR)/configure/RELEASE_SUPPORT.local
+-include $(AREA_DETECTOR)/configure/RELEASE_SUPPORT.local.$(EPICS_HOST_ARCH)
 include $(AREA_DETECTOR)/configure/RELEASE_LIBS.local
-include $(AREA_DETECTOR)/configure/RELEASE.local
--include $(AREA_DETECTOR)/configure/RELEASE.local.$(EPICS_HOST_ARCH)
-
