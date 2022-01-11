@@ -40,7 +40,7 @@ NDStdArraysConfigure("Image2", 3, 0, "gp2", 1, 0)
 
 # This waveform allows transporting 8-bit images
 # needs to fit in EPICS_CA_MAX_ARRAY_BYTES
-epicsEnvSet("EPICS_CA_MAX_ARRAY_BYTES",  "1000000")
+epicsEnvSet("EPICS_CA_MAX_ARRAY_BYTES",  "20000000")
 #
 dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:image1:,PORT=Image1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1")
 dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:image2:,PORT=Image2,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,NDARRAY_ADDR=1,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1")
