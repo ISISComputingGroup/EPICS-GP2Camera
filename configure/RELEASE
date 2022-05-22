@@ -9,6 +9,7 @@ ICPCONFIG=$(SUPPORT)/icpconfig/master
 LIBJSON=$(SUPPORT)/libjson/master
 MYSQL=$(SUPPORT)/MySQL/master
 NETSHRVAR=$(SUPPORT)/NetShrVar/master
+NETSTREAMS=$(SUPPORT)/NetStreams/master
 ONCRPC=$(SUPPORT)/oncrpc/master
 PCRE=$(SUPPORT)/pcre/master
 PUGIXML=$(SUPPORT)/pugixml/master

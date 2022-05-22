@@ -18,7 +18,7 @@ LIBRARY_IOC += GP2Camera
 GP2Camera_SRCS += GP2CameraDriver.cpp
 
 GP2Camera_LIBS += asyn oncrpc utilities zlib pcrecpp pcre pugixml
-GP2Camera_LIBS += NetShrVar
+GP2Camera_LIBS += NetShrVar NetStreams
 GP2Camera_LIBS += ffmpegServer
 GP2Camera_LIBS += avdevice
 GP2Camera_LIBS += avformat
