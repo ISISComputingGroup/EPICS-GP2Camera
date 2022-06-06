@@ -150,6 +150,22 @@ record(mbbi, "$(P)COMMAND")
     field(SCAN, "I/O Intr")
 }
 
+record(sseq, "$(P)STARTUP:SP")
+{
+    field(DO1, "0")
+    field(LNK1, "$(P)COMMAND:SP")
+	field(DLY2, "5")
+    field(DO2, "162")
+    field(LNK2, "$(P)ICOMPTRIM:MSB:SP")
+    field(DO3, "248")
+    field(LNK3, "$(P)ICOMPTRIM:LSB:SP")
+    field(DO4, "13")
+    field(LNK4, "$(P)COMMAND:SP")
+	field(DLY5, "1")
+    field(DO5, "8")
+    field(LNK5, "$(P)COMMAND:SP")
+}
+
 record(longin, "$(P)_EXECUTE:ONE")
 {
     field(VAL, "1")
