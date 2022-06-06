@@ -1,4 +1,4 @@
-global { P="\$(P)", PORT=gp2, SCAN="I/O Intr", ZNAME="", ONAME="" }
+global { P="\$(P)", PORT=nsv, SCAN="I/O Intr", ZNAME="OFF", ONAME="ON" }
 
 file "$(NETSHRVAR)/db/NetShrVar_boolean.template"
 {
@@ -22,7 +22,7 @@ file "$(NETSHRVAR)/db/NetShrVar_int32.template"
    { "DURATION:5", "Duration5", "Duration5" }
    { "PAUSE:1", "Pause1", "Pause1" }
    { "PAUSE:2", "Pause2", "Pause2" }
-   { "PAUSE:3", "Pause2", "Pause3" }
+   { "PAUSE:3", "Pause3", "Pause3" }
    { "PAUSE:4", "Pause4", "Pause4" }
    { "PAUSE:5", "Pause5", "Pause5" }
    { "LASTTIMECODE:1", "LastTimecode1", "LastTimecode1" }
@@ -30,4 +30,6 @@ file "$(NETSHRVAR)/db/NetShrVar_int32.template"
    { "LASTTIMECODE:3", "LastTimecode3", "LastTimecode3" }
    { "LASTTIMECODE:4", "LastTimecode4", "LastTimecode4" }
    { "LASTTIMECODE:5", "LastTimecode5", "LastTimecode5" }
+   { "VTHN", "VThN", "VThN" }
+   { "VTHP", "VThP", "VThP" }
 }

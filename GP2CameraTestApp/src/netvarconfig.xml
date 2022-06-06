@@ -38,6 +38,16 @@
 
 	  <param name="FILEPATH" type="string" access="R,W" netvar="//ndw1958/ibex/Stringpath" /> 
 	 
+	  <param name="TrimStringPath" type="string" access="R,W" netvar="//ndw1958/ibex/TrimStringPath" /> 
+
+	  <param name="VThN" type="int32" access="R,W" netvar="//ndw1958/ibex/VThN" /> 
+
+	  <param name="VThP" type="int32" access="R,W" netvar="//ndw1958/ibex/VThP" /> 
+
+	  <param name="Triggered" type="boolean" access="R,W" netvar="//ndw1958/ibex/Triggered" />
+	  
+	  <param name="Save" type="boolean" access="R,W" netvar="//ndw1958/ibex/Save" /> 
+
 	  <param name="EXECUTE" type="boolean" access="R,W" netvar="//ndw1958/ibex/Execute" /> 
 	  
 	  <param name="DATA" type="int16array" access="R" netvar="//ndw1958/ibex/GP2Data" /> 
