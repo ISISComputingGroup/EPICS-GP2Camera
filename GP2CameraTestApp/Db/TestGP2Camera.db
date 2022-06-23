@@ -9,7 +9,7 @@ record(waveform, "$(P)NSVDATA")
     field(PREC, "3")
     field(SCAN, "I/O Intr")
 	field(TSE, -2)
-e}
+}
 
 #record(waveform, "$(P)NSVDATA:SP")
 #{

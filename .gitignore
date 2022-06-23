@@ -15,3 +15,5 @@ relPaths.sh
 /doc/
 .project
 NULL
+*_info_settings.req
+*_info_positions.req

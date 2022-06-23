@@ -21,10 +21,11 @@ epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 asynSetMinTimerPeriod(0.001)
 
 NetShrVarConfigure("nsv", "sec1", "$(TOP)/GP2CameraTestApp/src/netvarconfig.xml", 50, 0)
-#GP2CameraConfigure("gp2", "nsv", "DATA", 1)
-GP2CameraConfigure("gp2", "nsv", "DATA", 0)
+## pass 1 as 4th argument to do callbacks on PV with array data
+GP2CameraConfigure("gp2", "nsv", "DATA", 1)
+#GP2CameraConfigure("gp2", "nsv", "DATA", 0)
 
-dbLoadRecords("$(TOP)/db/ADGP2Camera.template","P=$(MYPVPREFIX),R=GP2:,PORT=gp2,ADDR=0,TIMEOUT=1")
+dbLoadRecords("$(TOP)/db/ADGP2Camera.template","P=$(MYPVPREFIX),R=GP2:,PORT=gp2,ADDR=0,TIMEOUT=1,ENABLED=1,DATATYPE=2,TYPE=Int16")
 
 ## Load record instances
 
@@ -42,47 +43,37 @@ NDStdArraysConfigure("Image2", 3, 0, "gp2", 1, 0)
 # needs to fit in EPICS_CA_MAX_ARRAY_BYTES
 epicsEnvSet("EPICS_CA_MAX_ARRAY_BYTES",  "20000000")
 #
-dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:image1:,PORT=Image1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1")
-dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:image2:,PORT=Image2,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,NDARRAY_ADDR=1,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1")
+dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:image1:,PORT=Image1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,NDARRAY_ADDR=0,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1,DATATYPE=2")
+dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:image2:,PORT=Image2,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,NDARRAY_ADDR=1,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1,DATATYPE=2")
 
-# This waveform allows transporting 32-bit images
-#dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=DAE:image1:,PORT=Image1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,TYPE=Int32,FTVL=LONG,NELEMENTS=12000000,ENABLED=1")
+NDProcessConfigure("PROC1", 3, 0, "gp2", 0)
+dbLoadRecords("NDProcess.template", "P=$(MYPVPREFIX),R=GP2:PROC1:,PORT=PROC1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1,DATATYPE=2,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000")
 
-## Create an FFT plugin
-#NDFFTConfigure("FFT1", 3, 0, "gp2", 0)
-#dbLoadRecords("NDFFT.template", "P=$(PREFIX),R=DAE:FFT1:,PORT=FFT1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),NAME=FFT1,NCHANS=2048")
+NDTransformConfigure("TPROC1", 3, 0, "PROC1", 0, 0)
+dbLoadRecords("NDTransform.template", "P=$(MYPVPREFIX),R=GP2:TPROC1:,PORT=TPROC1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=PROC1,NDARRAY_ADDR=0,DATATYPE=4,ENABLED=1,TYPE=Int32,FTVL=LONG,NELEMENTS=150000")
 
-NDProcessConfigure("PROC", 3, 0, "gp2", 0)
-dbLoadRecords("NDProcess.template", "P=$(MYPVPREFIX),R=GP2:PROC:,PORT=PROC,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+NDROIConfigure("ROI1", 3, 0, "TPROC1", 0, 0)
+dbLoadRecords("NDROI.template", "P=$(MYPVPREFIX),R=GP2:roi1:,PORT=ROI1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=TPROC1,NDARRAY_ADDR=0,DATATYPE=4,ENABLED=1,TYPE=Int32,FTVL=LONG,NELEMENTS=150000")
 
-NDColorConvertConfigure("COL", 3, 0, "PROC", 0)
-dbLoadRecords("NDColorConvert.template","P=$(MYPVPREFIX),R=GP2:COL:,PORT=COL,ADDR=0,TIMEOUT=1,NDARRAY_PORT=PROC,ENABLED=1")  
+NDStatsConfigure("STATS1", 3, 0, "ROI1", 0)
+NDTimeSeriesConfigure("STATS1_TS", 100, 0, "ROI1", 0, 22, 0, 0, 0, 0)
+dbLoadRecords("NDStats.template", "P=$(MYPVPREFIX),R=GP2:STATS1:,PORT=STATS1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=ROI1,ENABLED=1,DATATYPE=4,TYPE=Int32,FTVL=LONG,NCHANS=1,XSIZE=1,YSIZE=1,HIST_SIZE=1")
 
-#ffmpegServerConfigure(8081)
-## ffmpegStreamConfigure(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr, maxMemory)
-#ffmpegStreamConfigure("C1.MJPG", 2, 0, "gp2", "0")
-#dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegStream.template", "P=$(MYPVPREFIX),R=GP2:Stream:,PORT=C1.MJPG,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
-#ffmpegStreamConfigure("C1.MJPG", 2, 0, "COL", "0")
-#dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegStream.template", "P=$(MYPVPREFIX),R=GP2:Stream:,PORT=C1.MJPG,ADDR=0,TIMEOUT=1,NDARRAY_PORT=COL,ENABLED=1")
 
-## ffmpegFileConfigure(portName, queueSize, blockingCallbacks, NDArrayPort, NDArrayAddr)
-#ffmpegFileConfigure("C1.FILE", 16, 0, "gp2", 0)
-#dbLoadRecords("$(FFMPEGSERVER)/db/ffmpegFile.template", "P=$(MYPVPREFIX),R=GP2:File:,PORT=C1.FILE,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+#NDColorConvertConfigure("COL", 3, 0, "PROC", 0)
+#dbLoadRecords("NDColorConvert.template","P=$(MYPVPREFIX),R=GP2:COL:,PORT=COL,ADDR=0,TIMEOUT=1,NDARRAY_PORT=PROC,ENABLED=1")  
 
-NDPvaConfigure("PVA", 3, 0, "gp2", 0, "$(MYPVPREFIX)GP2:V4:image1")
-dbLoadRecords("NDPva.template", "P=$(MYPVPREFIX),R=GP2:V4:,PORT=PVA,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
+NDPvaConfigure("PVA1", 3, 0, "ROI1", 0, "$(MYPVPREFIX)GP2:V4:image")
+dbLoadRecords("NDPva.template", "P=$(MYPVPREFIX),R=GP2:V4:,PORT=PVA1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=ROI1,ENABLED=1,DATATYPE=4")
 
-NDStdArraysConfigure("ImageSum", 3, 0, "PROC", 0, 0)
-dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:imageSum:,PORT=ImageSum,ADDR=0,TIMEOUT=1,NDARRAY_PORT=PROC,TYPE=Int16,FTVL=SHORT,NELEMENTS=150000,ENABLED=1")
+NDStdArraysConfigure("ImageSum", 3, 0, "ROI1", 0, 0)
+dbLoadRecords("NDStdArrays.template", "P=$(MYPVPREFIX),R=GP2:imageSum:,PORT=ImageSum,ADDR=0,TIMEOUT=1,NDARRAY_PORT=ROI1,TYPE=Int32,FTVL=LONG,NELEMENTS=150000,ENABLED=1,DATATYPE=4")
 
 #NDFileHDF5Configure ("HDF5", 3, 0, "gp2", 0)
 #dbLoadRecords("NDFileHDF5.template", "P=$(MYPVPREFIX),R=GP2:HDF5:,PORT=HDF5,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
 
 #NDFileTIFFConfigure("TIFF", 3, 0, "gp2", 0)
 #dbLoadRecords("NDFileTIFF.template", "P=$(MYPVPREFIX),R=GP2:TIFF:,PORT=TIFF,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
-
-#NDStatsConfigure("STATS", 3, 0, "gp2", 0)
-#dbLoadRecords("NDStats.template", "P=$(MYPVPREFIX),R=GP2:STATS:,PORT=STATS,ADDR=0,TIMEOUT=1,NDARRAY_PORT=gp2,ENABLED=1")
 
 ##ISIS## Stuff that needs to be done after all records are loaded but before iocInit is called 
 < $(IOCSTARTUP)/preiocinit.cmd
@@ -95,3 +86,9 @@ iocInit
 
 ##ISIS## Stuff that needs to be done after iocInit is called e.g. sequence programs 
 < $(IOCSTARTUP)/postiocinit.cmd
+
+dbpf "$(MYPVPREFIX)GP2:PROC1:FilterType", "Sum"
+dbpf "$(MYPVPREFIX)GP2:PROC1:NumFilter", "1000000000"
+dbpf "$(MYPVPREFIX)GP2:PROC1:EnableFilter", "1"
+dbpf "$(MYPVPREFIX)GP2:PROC1:DataTypeOut", "Int32"
+dbpf "$(MYPVPREFIX)GP2:DataType", "2"

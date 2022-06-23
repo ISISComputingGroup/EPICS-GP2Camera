@@ -337,16 +337,17 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 		{
             setIntegerParam(ADNumImagesCounter, 0);
 			m_old_acquiring = acquiring;
-			m_outfile = fopen(filename, "wb");
-			if (m_outfile == NULL)
-			{
-			    std::cerr << "ERROR: Cannot open file \"" << filename << "\"" << std::endl;
-			}
-			else
-			{
-			    std::cerr << "Opened \"" << filename << "\"" << std::endl;
-			    m_filename = filename;
-			}
+            //// disable file saving
+			//m_outfile = fopen(filename, "wb");
+			//if (m_outfile == NULL)
+			//{
+			//    std::cerr << "ERROR: Cannot open file \"" << filename << "\"" << std::endl;
+			//}
+			//else
+			//{
+			//    std::cerr << "Opened \"" << filename << "\"" << std::endl;
+			//    m_filename = filename;
+			//}
         }
         setIntegerParam(ADStatus, ADStatusAcquire); 
 		epicsTimeGetCurrent(&startTime);
