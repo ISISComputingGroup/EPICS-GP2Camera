@@ -55,7 +55,10 @@ void GP2CameraDriver::setADAcquire(int acquire)
       if (acquire && !acquiring) {
         setStringParam(ADStatusMessage, "Acquiring data");
         setIntegerParam(ADStatus, ADStatusAcquire); 
-        setIntegerParam(ADAcquire, 1); 
+        setIntegerParam(ADAcquire, 1);
+        std::fill(m_tof.begin(), m_tof.end(), 0);
+        std::fill(m_values.begin(), m_values.end(), 0);
+        std::fill(m_valuesSum.begin(), m_valuesSum.end(), 0);
       }
       if (!acquire && acquiring) {
         setIntegerParam(ADAcquire, 0); 
@@ -133,11 +136,51 @@ void GP2CameraDriver::nsvDataInterruptCallback(asynUser *pasynUser, epicsInt16 *
 	}
 }
 
+void GP2CameraDriver::fakeDataC(void* arg)
+{
+    epicsThreadSleep(1.0);	// let constructor complete
+    GP2CameraDriver* driver = (GP2CameraDriver*)arg;
+	if (driver != NULL)
+	{
+	    driver->fakeData();
+	}
+}
+
+void GP2CameraDriver::fakeData()
+{
+    int nevents = 30;
+    int nelements = nevents * 3;
+    int sizeX, sizeY; 
+    epicsTimeStamp ts;
+    while(true)
+    {
+        lock();
+        getIntegerParam(ADSizeX, &sizeX);
+        getIntegerParam(ADSizeY, &sizeY);
+        unlock();
+        epicsTimeGetCurrent(&ts);
+        epicsInt16 *values = new epicsInt16[nelements];
+        int k = 0;
+        for(int i=0; i<nevents; ++i)
+        {
+            values[k++] = (double)rand() / (double)(RAND_MAX + 1) * sizeX;
+            values[k++] = (double)rand() / (double)(RAND_MAX + 1) * sizeY;
+            values[k++] = (double)rand() / (double)(RAND_MAX + 1) * m_tofBinsMax;
+        }
+	    DataQueueMessage message(values, nelements, ts);
+	    if (m_data_queue.trySend(&message, sizeof(DataQueueMessage)) != 0)
+	    {
+		    std::cerr << "Unable to queue fake data message" << std::endl;
+	    }
+        epicsThreadSleep(0.1);	// 10Hz data
+	}
+}
+
 /// Constructor for the isisdaeDriver class.
 /// Calls constructor for the asynPortDriver base class.
 /// \param[in] dcomint DCOM interface pointer created by lvDCOMConfigure()
 /// \param[in] portName @copydoc initArg0
-GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, const char* nsvParam, int options)
+GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, const char* nsvParam, int options, int binSize)
    : ADDriver(portName, 
                     2, /* maxAddr */ 
                     NUM_GP2CAM_PARAMS,
@@ -150,10 +193,16 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0),	/* Default stack size*/
-					m_pRaw(NULL), m_options(options), m_old_acquiring(0), m_data_queue(20, sizeof(DataQueueMessage)),
-					m_outfile(NULL),m_filename(""), m_nsvDataClient(0)
+					m_pRaw(NULL), m_pRawTOF(NULL), m_options(options), m_old_acquiring(0), m_data_queue(20, sizeof(DataQueueMessage)),
+					m_outfile(NULL),m_filename(""), m_nsvDataClient(0), m_binSize(10) 
 {					
 	int status;
+    if (binSize != 0) {
+        m_binSize = binSize;
+    }
+    m_tofBinsMax = 4096;
+    m_tofBins = m_tofBinsMax / m_binSize + (m_tofBinsMax % m_binSize != 0 ? 1 : 0);
+    m_tof.resize(m_tofBins);
     const char *functionName = "GP2CameraDriver";
 	if (nsvParam != NULL && *nsvParam != '\0')
 	{
@@ -161,32 +210,42 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
 	}
 	createParam(P_nsvDataString, asynParamInt16Array, &P_nsvData);
 	createParam(P_testFileNameString, asynParamOctet, &P_testFileName);
+	createParam(P_tofBinValueString, asynParamInt32, &P_tofBinValue);
+	createParam(P_tofBinSizeString, asynParamInt32, &P_tofBinSize);
+	createParam(P_tofHistogramString, asynParamInt32Array, &P_tofHistogram);
     setStringParam(P_testFileName, "test.out");
+    setIntegerParam(P_tofBinSize, m_binSize);
     // area detector defaults
 //	int maxSizeX = 128, maxSizeY = 128;
 //	int maxSizeX = 8, maxSizeY = 8;
 	int maxSizeX = 324, maxSizeY = 324;
-	NDDataType_t dataType = NDUInt8; // data type for each frame
+    m_values.resize(maxSizeX * maxSizeY * m_tofBins);
+    m_valuesSum.resize(maxSizeX * maxSizeY);
+	NDDataType_t dataType = NDInt32; // data type for each frame
     status =  setStringParam (ADManufacturer, "GP2");
     status |= setStringParam (ADModel, "GP2");
-    status |= setIntegerParam(ADMaxSizeX, maxSizeX);
-    status |= setIntegerParam(ADMaxSizeY, maxSizeY);
-    status |= setIntegerParam(ADMinX, 0);
-    status |= setIntegerParam(ADMinY, 0);
-    status |= setIntegerParam(ADBinX, 1);
-    status |= setIntegerParam(ADBinY, 1);
-    status |= setIntegerParam(ADReverseX, 0);
-    status |= setIntegerParam(ADReverseY, 0);
-    status |= setIntegerParam(ADSizeX, maxSizeX);
-    status |= setIntegerParam(ADSizeY, maxSizeY);
-    status |= setIntegerParam(NDArraySizeX, maxSizeX);
-    status |= setIntegerParam(NDArraySizeY, maxSizeY);
-    status |= setIntegerParam(NDArraySize, 0);
-    status |= setIntegerParam(NDDataType, dataType);
     status |= setIntegerParam(ADImageMode, ADImageContinuous);
     status |= setDoubleParam (ADAcquireTime, .001);
     status |= setDoubleParam (ADAcquirePeriod, .005);
     status |= setIntegerParam(ADNumImages, 100);
+    status |= setIntegerParam(P_tofBinValue, 0);
+    for(int i=0; i<2; ++i)
+    {
+        status |= setIntegerParam(i, ADMaxSizeX, maxSizeX);
+        status |= setIntegerParam(i, ADMaxSizeY, maxSizeY);
+        status |= setIntegerParam(i, ADMinX, 0);
+        status |= setIntegerParam(i, ADMinY, 0);
+        status |= setIntegerParam(i, ADBinX, 1);
+        status |= setIntegerParam(i, ADBinY, 1);
+        status |= setIntegerParam(i, ADReverseX, 0);
+        status |= setIntegerParam(i, ADReverseY, 0);
+        status |= setIntegerParam(i, ADSizeX, maxSizeX);
+        status |= setIntegerParam(i, ADSizeY, maxSizeY);
+        status |= setIntegerParam(i, NDArraySizeX, maxSizeX);
+        status |= setIntegerParam(i, NDArraySizeY, maxSizeY);
+        status |= setIntegerParam(i, NDArraySize, 0);
+        status |= setIntegerParam(i, NDDataType, dataType);
+    }
 
     if (status) {
         printf("%s: unable to set DAE parameters\n", functionName);
@@ -202,6 +261,12 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
         printf("%s:%s: epicsThreadCreate failure\n", driverName, functionName);
         return;
     }
+#if 0
+    epicsThreadCreate("fakeData",
+                          epicsThreadPriorityMedium,
+                          epicsThreadGetStackSize(epicsThreadStackMedium),
+                          (EPICSTHREADFUNC)fakeDataC, this);
+#endif
 }
 
 void GP2CameraDriver::pollerThreadC1(void* arg)
@@ -256,7 +321,14 @@ asynStatus GP2CameraDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 	}
 	else
 	{
-		return asynPortDriver::writeInt32(pasynUser, value);
+		asynStatus stat = asynPortDriver::writeInt32(pasynUser, value);
+        if (function == P_tofBinValue)
+        {
+            // send en empty message to force an update in case we are not acquiring
+            DataQueueMessage message;
+            m_data_queue.trySend(&message, sizeof(DataQueueMessage));
+        }
+        return stat;        
 	}
 }
 
@@ -308,14 +380,16 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
     int numImages, numImagesCounter;
     int imageMode;
     int arrayCallbacks;
-    NDArray *pImage, *pEventData;
+    NDArray *pImage, *pImageTOF;
     double acquireTime, acquirePeriod, delay;
     epicsTimeStamp startTime, endTime;
     double elapsedTime;
+    int tofBinValue = 0;
 	char filename[256];
 
 		lock();
 		getIntegerParam(ADAcquire, &acquiring);
+		getIntegerParam(P_tofBinValue, &tofBinValue);
         getDoubleParam(ADAcquirePeriod, &acquirePeriod);
 		getStringParam(P_testFileName, sizeof(filename), filename);
 		if (acquiring == 0)
@@ -329,14 +403,19 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 				SetFileAttributes(m_filename.c_str(), FILE_ATTRIBUTE_READONLY);
 				m_filename = "";
 			}
-			unlock();
-//			epicsThreadSleep( acquirePeriod + (enable == 0 ? 1.0 : 0.0) );
-			return;
+            if (nelements > 0) // we use a fake 0 elements elsewhere
+            {
+                unlock();
+                return;
+            }
 		}
-		if (m_old_acquiring == 0)
+		else if (m_old_acquiring == 0)
 		{
             setIntegerParam(ADNumImagesCounter, 0);
 			m_old_acquiring = acquiring;
+            std::fill(m_tof.begin(), m_tof.end(), 0);
+            std::fill(m_values.begin(), m_values.end(), 0);
+            std::fill(m_valuesSum.begin(), m_valuesSum.end(), 0);
             //// disable file saving
 			//m_outfile = fopen(filename, "wb");
 			//if (m_outfile == NULL)
@@ -358,10 +437,12 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 
         setShutter(ADShutterOpen);
         callParamCallbacks();
-            
-        /* Update the image */
-        status = computeImage(value, nelements);
+        
+                    /* Update the image */
+        status = computeImage(value, nelements, tofBinValue);
 //        if (status) continue;
+
+        doCallbacksInt32Array(&(m_tof[0]), m_tof.size(), P_tofHistogram, 0);
 
 		// could sleep to make up to acquireTime
 		
@@ -373,7 +454,7 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
         callParamCallbacks();
 
         pImage = this->pArrays[0];
-	    pEventData = this->pArrays[1];
+	    pImageTOF = this->pArrays[1];
 		// setTimeStamp(epicsTS);   ??????
 		
         /* Get the current parameters */
@@ -390,9 +471,9 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
         pImage->uniqueId = imageCounter;
 		pImage->epicsTS = *epicsTS;
         pImage->timeStamp = epicsTS->secPastEpoch + epicsTS->nsec / 1.e9;
-        pEventData->uniqueId = imageCounter;
-		pEventData->epicsTS = *epicsTS;
-        pEventData->timeStamp = epicsTS->secPastEpoch + epicsTS->nsec / 1.e9;
+        pImageTOF->uniqueId = imageCounter;
+		pImageTOF->epicsTS = *epicsTS;
+        pImageTOF->timeStamp = epicsTS->secPastEpoch + epicsTS->nsec / 1.e9;
         //getTimeStamp(&pImage->epicsTS);
 
         /* Get any attributes that have been defined for this driver */
@@ -422,7 +503,7 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
           asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
                     "%s:%s: calling imageData callback\n", driverName, functionName);
           doCallbacksGenericPointer(pImage, NDArrayData, 0);
-          doCallbacksGenericPointer(pEventData, NDArrayData, 1);
+          doCallbacksGenericPointer(pImageTOF, NDArrayData, 1);
           this->lock();
         }
 
@@ -449,7 +530,7 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 }
 
 /** Computes the new image data */
-int GP2CameraDriver::computeImage(epicsInt16 *value, size_t nelements)
+int GP2CameraDriver::computeImage(epicsInt16 *value, size_t nelements, int tofBinValue)
 {
     int status = asynSuccess;
     NDDataType_t dataType;
@@ -485,39 +566,41 @@ int GP2CameraDriver::computeImage(epicsInt16 *value, size_t nelements)
                     driverName, functionName);
 
     /* Make sure parameters are consistent, fix them if they are not */
-    if (binX < 1) {
-        binX = 1;
-        status |= setIntegerParam(ADBinX, binX);
+    for(int i=0; i<2; ++i)
+    {
+        if (binX < 1) {
+            binX = 1;
+            status |= setIntegerParam(i, ADBinX, binX);
+        }
+        if (binY < 1) {
+            binY = 1;
+            status |= setIntegerParam(i, ADBinY, binY);
+        }
+        if (minX < 0) {
+            minX = 0;
+            status |= setIntegerParam(i, ADMinX, minX);
+        }
+        if (minY < 0) {
+            minY = 0;
+            status |= setIntegerParam(i, ADMinY, minY);
+        }
+        if (minX > maxSizeX-1) {
+            minX = maxSizeX-1;
+            status |= setIntegerParam(i, ADMinX, minX);
+        }
+        if (minY > maxSizeY-1) {
+            minY = maxSizeY-1;
+            status |= setIntegerParam(i, ADMinY, minY);
+        }
+        if (minX+sizeX > maxSizeX) {
+            sizeX = maxSizeX-minX;
+            status |= setIntegerParam(i, ADSizeX, sizeX);
+        }
+        if (minY+sizeY > maxSizeY) {
+            sizeY = maxSizeY-minY;
+            status |= setIntegerParam(i, ADSizeY, sizeY);
+        }
     }
-    if (binY < 1) {
-        binY = 1;
-        status |= setIntegerParam(ADBinY, binY);
-    }
-    if (minX < 0) {
-        minX = 0;
-        status |= setIntegerParam(ADMinX, minX);
-    }
-    if (minY < 0) {
-        minY = 0;
-        status |= setIntegerParam(ADMinY, minY);
-    }
-    if (minX > maxSizeX-1) {
-        minX = maxSizeX-1;
-        status |= setIntegerParam(ADMinX, minX);
-    }
-    if (minY > maxSizeY-1) {
-        minY = maxSizeY-1;
-        status |= setIntegerParam(ADMinY, minY);
-    }
-    if (minX+sizeX > maxSizeX) {
-        sizeX = maxSizeX-minX;
-        status |= setIntegerParam(ADSizeX, sizeX);
-    }
-    if (minY+sizeY > maxSizeY) {
-        sizeY = maxSizeY-minY;
-        status |= setIntegerParam(ADSizeY, sizeY);
-    }
-
     switch (colorMode) {
         case NDColorModeMono:
             ndims = 2;
@@ -548,13 +631,15 @@ int GP2CameraDriver::computeImage(epicsInt16 *value, size_t nelements)
 //    if (resetImage) {
     /* Free the previous raw buffer */
         if (m_pRaw) m_pRaw->release();
+        if (m_pRawTOF) m_pRawTOF->release();
         /* Allocate the raw buffer we use to compute images. */
         dims[xDim] = maxSizeX;
         dims[yDim] = maxSizeY;
         if (ndims > 2) dims[colorDim] = 3;
         m_pRaw = this->pNDArrayPool->alloc(ndims, dims, dataType, 0, NULL);
+        m_pRawTOF = this->pNDArrayPool->alloc(ndims, dims, dataType, 0, NULL);
 
-        if (!m_pRaw) {
+        if (!m_pRaw || !m_pRawTOF) {
             asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
                       "%s:%s: error allocating raw buffer\n",
                       driverName, functionName);
@@ -564,28 +649,28 @@ int GP2CameraDriver::computeImage(epicsInt16 *value, size_t nelements)
 
     switch (dataType) {
         case NDInt8:
-            status |= computeArray<epicsInt8>(value, nelements, maxSizeX, maxSizeY);
+            status |= computeArray<epicsInt8>(value, nelements, maxSizeX, maxSizeY, tofBinValue);
             break;
         case NDUInt8:
-            status |= computeArray<epicsUInt8>(value, nelements, maxSizeX, maxSizeY);
+            status |= computeArray<epicsUInt8>(value, nelements, maxSizeX, maxSizeY, tofBinValue);
             break;
         case NDInt16:
-            status |= computeArray<epicsInt16>(value, nelements, maxSizeX, maxSizeY);
+            status |= computeArray<epicsInt16>(value, nelements, maxSizeX, maxSizeY, tofBinValue);
             break;
         case NDUInt16:
-            status |= computeArray<epicsUInt16>(value, nelements, maxSizeX, maxSizeY);
+            status |= computeArray<epicsUInt16>(value, nelements, maxSizeX, maxSizeY, tofBinValue);
             break;
         case NDInt32:
-            status |= computeArray<epicsInt32>(value, nelements, maxSizeX, maxSizeY);
+            status |= computeArray<epicsInt32>(value, nelements, maxSizeX, maxSizeY, tofBinValue);
             break;
         case NDUInt32:
-            status |= computeArray<epicsUInt32>(value, nelements, maxSizeX, maxSizeY);
+            status |= computeArray<epicsUInt32>(value, nelements, maxSizeX, maxSizeY, tofBinValue);
             break;
         case NDFloat32:
-            status |= computeArray<epicsFloat32>(value, nelements, maxSizeX, maxSizeY);
+            status |= computeArray<epicsFloat32>(value, nelements, maxSizeX, maxSizeY, tofBinValue);
             break;
         case NDFloat64:
-            status |= computeArray<epicsFloat64>(value, nelements, maxSizeX, maxSizeY);
+            status |= computeArray<epicsFloat64>(value, nelements, maxSizeX, maxSizeY, tofBinValue);
             break;
     }
 
@@ -594,7 +679,10 @@ int GP2CameraDriver::computeImage(epicsInt16 *value, size_t nelements)
      * convertImage detects that case and is very efficient */
     m_pRaw->initDimension(&dimsOut[xDim], sizeX);
     m_pRaw->initDimension(&dimsOut[yDim], sizeY);
+    m_pRawTOF->initDimension(&dimsOut[xDim], sizeX);
+    m_pRawTOF->initDimension(&dimsOut[yDim], sizeY);
     if (ndims > 2) m_pRaw->initDimension(&dimsOut[colorDim], 3);
+    if (ndims > 2) m_pRawTOF->initDimension(&dimsOut[colorDim], 3);
     dimsOut[xDim].binning = binX;
     dimsOut[xDim].offset  = minX;
     dimsOut[xDim].reverse = reverseX;
@@ -604,8 +692,13 @@ int GP2CameraDriver::computeImage(epicsInt16 *value, size_t nelements)
     /* We save the most recent image buffer so it can be used in the read() function.
      * Now release it before getting a new version. */
     if (this->pArrays[0]) this->pArrays[0]->release();
+    if (this->pArrays[1]) this->pArrays[1]->release();
     status = this->pNDArrayPool->convert(m_pRaw,
                                          &this->pArrays[0],
+                                         dataType,
+                                         dimsOut);
+    status |= this->pNDArrayPool->convert(m_pRawTOF,
+                                         &this->pArrays[1],
                                          dataType,
                                          dimsOut);
     if (status) {
@@ -614,37 +707,58 @@ int GP2CameraDriver::computeImage(epicsInt16 *value, size_t nelements)
                     driverName, functionName);
         return(status);
     }
+    status = asynSuccess;
     pImage = this->pArrays[0];
     pImage->getInfo(&arrayInfo);
-    status = asynSuccess;
     status |= setIntegerParam(NDArraySize,  (int)arrayInfo.totalBytes);
     status |= setIntegerParam(NDArraySizeX, (int)pImage->dims[xDim].size);
     status |= setIntegerParam(NDArraySizeY, (int)pImage->dims[yDim].size);
+    pImage = this->pArrays[1];
+    pImage->getInfo(&arrayInfo);
+    status = asynSuccess;
+    status |= setIntegerParam(1, NDArraySize,  (int)arrayInfo.totalBytes);
+    status |= setIntegerParam(1, NDArraySizeX, (int)pImage->dims[xDim].size);
+    status |= setIntegerParam(1, NDArraySizeY, (int)pImage->dims[yDim].size);
     if (status) asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
                     "%s:%s: error setting parameters\n",
                     driverName, functionName);
-    if (this->pArrays[1]) this->pArrays[1]->release();
-	dims2[0] = 3;
-	dims2[1] = nelements / 3;
-    this->pArrays[1] = this->pNDArrayPool->alloc(2, dims2, NDUInt16, 0, NULL);
-	memcpy(this->pArrays[1]->pData, value, nelements * sizeof(epicsInt16));
+                    
     return(status);
 }
 
 // supplied array of x,y,t
 template <typename epicsType> 
-int GP2CameraDriver::computeArray(epicsInt16* value, size_t nelements, int sizeX, int sizeY)
+int GP2CameraDriver::computeArray(epicsInt16* value, size_t nelements, int sizeX, int sizeY, int tofBinValue)
 {
     epicsType *pMono=NULL, *pRed=NULL, *pGreen=NULL, *pBlue=NULL;
     int columnStep=0, rowStep=0, colorMode;
     int status = asynSuccess;
     double exposureTime, gain;
     int i, j, k;
-	
+	int xi, yi, ti;
+
+	for(i=0; i< nelements; i += 3)
+	{
+		xi = value[i];
+		yi = value[i+1];
+		ti = value[i+2] / m_binSize;
+		if (xi >= 0 && xi < sizeX && yi >= 0 && yi < sizeY && ti >= 0 && ti < m_tofBins)
+		{
+            ++(m_tof[ti]);
+            ++(m_values[(yi * sizeX + xi) * m_tofBins + ti]);
+            ++(m_valuesSum[yi * sizeX + xi]);
+        }
+        else
+        {
+            std::cerr << "value out of range" << std::endl;
+        }
+    }
+
     status = getDoubleParam (ADGain,        &gain);
     status = getIntegerParam(NDColorMode,   &colorMode);
     status = getDoubleParam (ADAcquireTime, &exposureTime);
 
+// one
     switch (colorMode) {
         case NDColorModeMono:
             pMono = (epicsType *)m_pRaw->pData;
@@ -672,51 +786,79 @@ int GP2CameraDriver::computeArray(epicsInt16* value, size_t nelements, int sizeX
             break;
     }
     m_pRaw->pAttributeList->add("ColorMode", "Color mode", NDAttrInt32, &colorMode);
-    int xi, yi;
 	memset(m_pRaw->pData, 0, m_pRaw->dataSize);
-	for(i=0; i< nelements; i += 3)
-	{
-		xi = value[i];
-		yi = value[i+1];
-		if (xi >= 0 && xi < sizeX && yi >= 0 && yi < sizeY)
-		{
-			switch (colorMode) {
-			case NDColorModeMono:
-				++(pMono[yi * sizeX + xi]);
-				break;
-			case NDColorModeRGB1:
-			case NDColorModeRGB2:
-			case NDColorModeRGB3:
-				k = columnStep * (yi * sizeX + xi) + yi * rowStep;
-				++(pRed[k]);
-				++(pGreen[k]);
-				++(pBlue[k]);
-				break;
-			}
-		}
-	}
 	for(i=0; i< sizeX; ++i)
 	{
 		for(j=0; j< sizeY; ++j)
 		{
 			switch (colorMode) {
 			case NDColorModeMono:
-				pMono[j * sizeX + i] = static_cast<epicsType>(gain * pMono[j * sizeX + i] + 0.5);
+                k = j * sizeX + i;
+                pMono[k] = static_cast<epicsType>(gain * m_valuesSum[j * sizeX + i] + 0.5);
 				break;
 			case NDColorModeRGB1:
 			case NDColorModeRGB2:
 			case NDColorModeRGB3:
 				k = columnStep * (j * sizeX + i) + j * rowStep;
-				pRed[k] = static_cast<epicsType>(gain * pRed[k] + 0.5);
-				pGreen[k] = static_cast<epicsType>(gain * pGreen[k] + 0.5);
-				pBlue[k] = static_cast<epicsType>(gain * pBlue[k] + 0.5);
+			    pRed[k] = pGreen[k] = pBlue[k] = static_cast<epicsType>(gain * m_valuesSum[j * sizeX + i] + 0.5);
 				break;
 			}
 		}
 	}
+
+// two
+
+    switch (colorMode) {
+        case NDColorModeMono:
+            pMono = (epicsType *)m_pRawTOF->pData;
+            break;
+        case NDColorModeRGB1:
+            columnStep = 3;
+            rowStep = 0;
+            pRed   = (epicsType *)m_pRawTOF->pData;
+            pGreen = (epicsType *)m_pRawTOF->pData+1;
+            pBlue  = (epicsType *)m_pRawTOF->pData+2;
+            break;
+        case NDColorModeRGB2:
+            columnStep = 1;
+            rowStep = 2 * sizeX;
+            pRed   = (epicsType *)m_pRawTOF->pData;
+            pGreen = (epicsType *)m_pRawTOF->pData + sizeX;
+            pBlue  = (epicsType *)m_pRawTOF->pData + 2*sizeX;
+            break;
+        case NDColorModeRGB3:
+            columnStep = 1;
+            rowStep = 0;
+            pRed   = (epicsType *)m_pRawTOF->pData;
+            pGreen = (epicsType *)m_pRawTOF->pData + sizeX*sizeY;
+            pBlue  = (epicsType *)m_pRawTOF->pData + 2*sizeX*sizeY;
+            break;
+    }
+    m_pRawTOF->pAttributeList->add("ColorMode", "Color mode", NDAttrInt32, &colorMode);
+	memset(m_pRawTOF->pData, 0, m_pRawTOF->dataSize);
+    if (tofBinValue >= 0 && tofBinValue < m_tofBins)
+    {
+        for(i=0; i< sizeX; ++i)
+        {
+            for(j=0; j< sizeY; ++j)
+            {
+                switch (colorMode) {
+                case NDColorModeMono:
+                    k = j * sizeX + i;
+                    pMono[k] = static_cast<epicsType>(gain * m_values[(j * sizeX + i) * m_tofBins + tofBinValue] + 0.5);
+                    break;
+                case NDColorModeRGB1:
+                case NDColorModeRGB2:
+                case NDColorModeRGB3:
+                    k = columnStep * (j * sizeX + i) + j * rowStep;
+                    pRed[k] = pGreen[k] = pBlue[k] = static_cast<epicsType>(gain * m_values[(j * sizeX + i) * m_tofBins + tofBinValue] + 0.5);
+                    break;
+                }
+            }
+        }
+    }
     return(status);
 }
-
 
 /** Controls the shutter */
 void GP2CameraDriver::setShutter(int open)
@@ -766,11 +908,12 @@ extern "C" {
 /// \param[in] progid @copydoc initArg5
 /// \param[in] username @copydoc initArg6
 /// \param[in] password @copydoc initArg7
-int GP2CameraConfigure(const char *portName, const char *nsvPortName, const char* nsvParam, int options)
+int GP2CameraConfigure(const char *portName, const char *nsvPortName, const char* nsvParam, int options, int binSize)
 {
 	try
 	{
-		GP2CameraDriver* driver = new GP2CameraDriver(portName, nsvPortName, nsvParam, options);
+		GP2CameraDriver* driver = new GP2CameraDriver(portName, nsvPortName, nsvParam,
+                                                      options, binSize);
 		if (driver == NULL)
 		{
 		    errlogSevPrintf(errlogMajor, "GP2CameraConfigure failed (NULL)\n");
@@ -794,13 +937,15 @@ static const iocshArg initArg2 = { "nsvParam", iocshArgString};			    ///< optio
 
 static const iocshArg initArg3 = { "options", iocshArgInt};			    ///< options as per #lvDCOMOptions enum
 
-static const iocshArg * const initArgs[] = { &initArg0, &initArg1, &initArg2, &initArg3 };
+static const iocshArg initArg4 = { "binSize", iocshArgInt};		 
+
+static const iocshArg * const initArgs[] = { &initArg0, &initArg1, &initArg2, &initArg3, &initArg4 };
 
 static const iocshFuncDef initFuncDef = {"GP2CameraConfigure", sizeof(initArgs) / sizeof(iocshArg*), initArgs};
 
 static void initCallFunc(const iocshArgBuf *args)
 {
-    GP2CameraConfigure(args[0].sval, args[1].sval, args[2].sval, args[3].ival);
+    GP2CameraConfigure(args[0].sval, args[1].sval, args[2].sval, args[3].ival, args[4].ival);
 }
 
 static void GP2CameraRegister(void)
