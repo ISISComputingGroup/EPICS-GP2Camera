@@ -261,10 +261,12 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
         printf("%s:%s: epicsThreadCreate failure\n", driverName, functionName);
         return;
     }
+#if 0
     epicsThreadCreate("fakeData",
                           epicsThreadPriorityMedium,
                           epicsThreadGetStackSize(epicsThreadStackMedium),
                           (EPICSTHREADFUNC)fakeDataC, this);
+#endif
 }
 
 void GP2CameraDriver::pollerThreadC1(void* arg)
@@ -319,13 +321,14 @@ asynStatus GP2CameraDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 	}
 	else
 	{
-		int stat = asynPortDriver::writeInt32(pasynUser, value);
+		asynStatus stat = asynPortDriver::writeInt32(pasynUser, value);
         if (function == P_tofBinValue)
         {
             // send en empty message to force an update in case we are not acquiring
             DataQueueMessage message;
             m_data_queue.trySend(&message, sizeof(DataQueueMessage));
-        }        
+        }
+        return stat;        
 	}
 }
 
@@ -400,7 +403,7 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 				SetFileAttributes(m_filename.c_str(), FILE_ATTRIBUTE_READONLY);
 				m_filename = "";
 			}
-            if (nelements > 0)
+            if (nelements > 0) // we use a fake 0 elements elsewhere
             {
                 unlock();
                 return;

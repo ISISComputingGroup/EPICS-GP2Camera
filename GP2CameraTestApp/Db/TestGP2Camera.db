@@ -33,6 +33,36 @@ record(waveform, "$(P)NSVDATA")
 #	field(TSE, -2)
 #}
 
+
+record(longout, "$(P)SAVE:SP")
+{
+    field(DTYP, "asynInt32")
+	field(UDFS, "NO_ALARM")
+    field(OUT,  "@asyn(nsv,0,0)Save")
+}
+
+record(longin, "$(P)SAVE")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn(nsv,0,0)Save")
+    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)TRIGGERED:SP")
+{
+    field(DTYP, "asynInt32")
+	field(UDFS, "NO_ALARM")
+    field(OUT,  "@asyn(nsv,0,0)Triggered")
+}
+
+record(longin, "$(P)TRIGGERED")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn(nsv,0,0)Triggered")
+    field(SCAN, "I/O Intr")
+}
+
+
 record(waveform, "$(P)TESTFILENAME:SP")
 {
     field(DESC, "NSV")
@@ -62,6 +92,7 @@ record(waveform, "$(P)FILEPATH:SP")
     field(DTYP, "asynOctetWrite")
 	field(FTVL, "CHAR")
 	field(NELM, 256)
+	field(UDFS, "NO_ALARM")
     field(INP,  "@asyn(nsv,0,0)FILEPATH")
 #	field(PINI, YES)
 	info(archive, "VAL")
@@ -79,10 +110,35 @@ record(waveform, "$(P)FILEPATH")
 	info(archive, "VAL")
 }
 
+record(waveform, "$(P)TRIMPATH:SP")
+{
+    field(DESC, "NSV")
+    field(DTYP, "asynOctetWrite")
+	field(FTVL, "CHAR")
+	field(NELM, 256)
+    field(INP,  "@asyn(nsv,0,0)TrimStringPath")
+#	field(PINI, YES)
+	field(UDFS, "NO_ALARM")
+	info(archive, "VAL")
+#    info(autosaveFields, "VAL")
+}
+
+record(waveform, "$(P)TRIMPATH")
+{
+    field(DESC, "NSV")
+    field(DTYP, "asynOctetRead")
+	field(FTVL, "CHAR")
+	field(NELM, 256)
+    field(INP,  "@asyn(nsv,0,0)TrimStringPath")
+    field(SCAN, "I/O Intr")
+	info(archive, "VAL")
+}
+
 record(mbbo, "$(P)COMMAND:SP")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn(nsv,0,0)COMMAND")
+	field(UDFS, "NO_ALARM")
 	field(ZRST, "Initialize")
 	field(ZRVL, 0)
 	field(ONST, "SendDACSettings")
