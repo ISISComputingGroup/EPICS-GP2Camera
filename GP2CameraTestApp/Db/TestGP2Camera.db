@@ -282,3 +282,27 @@ record(longin, "$(P)TOF_BIN_SIZE")
     field(INP,  "@asyn(gp2,0,0)TOF_BIN_SIZE")
     field(SCAN, "I/O Intr")
 }
+
+record(bo, "$(P)SIMDATA:SP")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn(gp2,0,0)SIMDATA")
+}
+
+record(ao, "$(P)UPDATE_RATE:SP")
+{
+    field(DTYP, "asynFloat64")
+    field(OUT,  "@asyn(gp2,0,0)UPDATE_RATE")
+	field(PINI, "YES")
+	field(VAL, "0.5")
+	field(PREC, "1")
+    info(autosaveFields, "VAL")
+}
+
+record(ai, "$(P)UPDATE_RATE")
+{
+    field(DTYP, "asynFloat64")
+    field(INP,  "@asyn(gp2,0,0)UPDATE_RATE")
+    field(SCAN, "I/O Intr")
+	field(PREC, "1")
+}

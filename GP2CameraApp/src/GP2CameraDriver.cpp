@@ -59,6 +59,7 @@ void GP2CameraDriver::setADAcquire(int acquire)
         std::fill(m_tof.begin(), m_tof.end(), 0);
         std::fill(m_values.begin(), m_values.end(), 0);
         std::fill(m_valuesSum.begin(), m_valuesSum.end(), 0);
+        setIntegerParam(ADNumImagesCounter, 0);
       }
       if (!acquire && acquiring) {
         setIntegerParam(ADAcquire, 0); 
@@ -150,14 +151,20 @@ void GP2CameraDriver::fakeData()
 {
     int nevents = 30;
     int nelements = nevents * 3;
-    int sizeX, sizeY; 
+    int sizeX, sizeY, simData; 
     epicsTimeStamp ts;
     while(true)
     {
+        epicsThreadSleep(0.1);	// 10Hz data
         lock();
         getIntegerParam(ADSizeX, &sizeX);
         getIntegerParam(ADSizeY, &sizeY);
+        getIntegerParam(P_simData, &simData);
         unlock();
+        if (simData == 0)
+        {
+            continue;
+        }
         epicsTimeGetCurrent(&ts);
         epicsInt16 *values = new epicsInt16[nelements];
         int k = 0;
@@ -172,7 +179,6 @@ void GP2CameraDriver::fakeData()
 	    {
 		    std::cerr << "Unable to queue fake data message" << std::endl;
 	    }
-        epicsThreadSleep(0.1);	// 10Hz data
 	}
 }
 
@@ -204,6 +210,7 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
     m_tofBins = m_tofBinsMax / m_binSize + (m_tofBinsMax % m_binSize != 0 ? 1 : 0);
     m_tof.resize(m_tofBins);
     const char *functionName = "GP2CameraDriver";
+    epicsTimeGetCurrent(&m_lastUpdate);
 	if (nsvParam != NULL && *nsvParam != '\0')
 	{
 		m_nsvDataClient = new NSVDataClient(this, nsvPortName, 0, nsvParam);
@@ -213,8 +220,11 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
 	createParam(P_tofBinValueString, asynParamInt32, &P_tofBinValue);
 	createParam(P_tofBinSizeString, asynParamInt32, &P_tofBinSize);
 	createParam(P_tofHistogramString, asynParamInt32Array, &P_tofHistogram);
+	createParam(P_simDataString, asynParamInt32, &P_simData);
+	createParam(P_updateRateString, asynParamFloat64, &P_updateRate);
     setStringParam(P_testFileName, "test.out");
     setIntegerParam(P_tofBinSize, m_binSize);
+    setDoubleParam(P_updateRate, 0.5);
     // area detector defaults
 //	int maxSizeX = 128, maxSizeY = 128;
 //	int maxSizeX = 8, maxSizeY = 8;
@@ -261,12 +271,10 @@ GP2CameraDriver::GP2CameraDriver(const char *portName, const char* nsvPortName, 
         printf("%s:%s: epicsThreadCreate failure\n", driverName, functionName);
         return;
     }
-#if 0
-    epicsThreadCreate("fakeData",
-                          epicsThreadPriorityMedium,
-                          epicsThreadGetStackSize(epicsThreadStackMedium),
-                          (EPICSTHREADFUNC)fakeDataC, this);
-#endif
+    epicsThreadCreate("simData",
+                       epicsThreadPriorityMedium,
+                       epicsThreadGetStackSize(epicsThreadStackMedium),
+                       (EPICSTHREADFUNC)fakeDataC, this);
 }
 
 void GP2CameraDriver::pollerThreadC1(void* arg)
@@ -315,7 +323,16 @@ void GP2CameraDriver::pollerThread1()
 asynStatus GP2CameraDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
 	int function = pasynUser->reason;
-	if (function < FIRST_GP2CAM_PARAM)
+    if (function == ADAcquire)
+    {
+        setADAcquire(value);
+		asynStatus stat = ADDriver::writeInt32(pasynUser, value);
+        // send en empty message to force an update in case we are not acquiring
+        DataQueueMessage message;
+        m_data_queue.trySend(&message, sizeof(DataQueueMessage));
+        return stat;
+    }
+	else if (function < FIRST_GP2CAM_PARAM)
 	{
 		return ADDriver::writeInt32(pasynUser, value);
 	}
@@ -328,7 +345,7 @@ asynStatus GP2CameraDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
             DataQueueMessage message;
             m_data_queue.trySend(&message, sizeof(DataQueueMessage));
         }
-        return stat;        
+        return stat;
 	}
 }
 
@@ -442,7 +459,6 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
         status = computeImage(value, nelements, tofBinValue);
 //        if (status) continue;
 
-        doCallbacksInt32Array(&(m_tof[0]), m_tof.size(), P_tofHistogram, 0);
 
 		// could sleep to make up to acquireTime
 		
@@ -457,11 +473,13 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 	    pImageTOF = this->pArrays[1];
 		// setTimeStamp(epicsTS);   ??????
 		
+        double updateRate;
         /* Get the current parameters */
         getIntegerParam(NDArrayCounter, &imageCounter);
         getIntegerParam(ADNumImages, &numImages);
         getIntegerParam(ADNumImagesCounter, &numImagesCounter);
         getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
+        getDoubleParam(P_updateRate, &updateRate);
         imageCounter++;
         numImagesCounter++;
         setIntegerParam(NDArrayCounter, imageCounter);
@@ -495,16 +513,21 @@ void GP2CameraDriver::processCameraData(epicsInt16 *value, size_t nelements, epi
 			}
 		}
 
-        if (arrayCallbacks) {
-          /* Call the NDArray callback */
-          /* Must release the lock here, or we can get into a deadlock, because we can
-           * block on the plugin lock, and the plugin can be calling us */
-          this->unlock();
-          asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
-                    "%s:%s: calling imageData callback\n", driverName, functionName);
-          doCallbacksGenericPointer(pImage, NDArrayData, 0);
-          doCallbacksGenericPointer(pImageTOF, NDArrayData, 1);
-          this->lock();
+        if (epicsTimeDiffInSeconds(&startTime, &m_lastUpdate) > updateRate)
+        {
+            m_lastUpdate = startTime;
+            doCallbacksInt32Array(&(m_tof[0]), m_tof.size(), P_tofHistogram, 0);
+            if (arrayCallbacks) {
+              /* Call the NDArray callback */
+              /* Must release the lock here, or we can get into a deadlock, because we can
+               * block on the plugin lock, and the plugin can be calling us */
+              this->unlock();
+              asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+                        "%s:%s: calling imageData callback\n", driverName, functionName);
+              doCallbacksGenericPointer(pImage, NDArrayData, 0);
+              doCallbacksGenericPointer(pImageTOF, NDArrayData, 1);
+              this->lock();
+            }
         }
 
         /* Call the callbacks to update any changes */

@@ -32,6 +32,8 @@ private:
     int P_tofHistogram; // int32array
     int P_tofBinValue; // int
     int P_tofBinSize; // int
+    int P_simData; // int
+    int P_updateRate; // float
 	int P_testFileName; // string
     
 	#define FIRST_GP2CAM_PARAM P_nsvData
@@ -42,6 +44,7 @@ private:
     int m_binSize;
     int m_tofBinsMax;
     int m_tofBins;
+    epicsTimeStamp m_lastUpdate;
 	FILE* m_outfile;
     std::vector<int> m_tof;
 	std::vector<epicsInt32> m_values; // values with TOF
@@ -80,6 +83,8 @@ private:
 #define P_tofHistogramString	"TOF_HISTOGRAM"
 #define P_tofBinValueString	    "TOF_BIN_VALUE"
 #define P_tofBinSizeString	    "TOF_BIN_SIZE"
+#define P_simDataString	        "SIMDATA"
+#define P_updateRateString	    "UPDATE_RATE"
 #define P_testFileNameString	"TESTFILENAME"
 
 #endif /* GP2CAMERADRIVER_H */
