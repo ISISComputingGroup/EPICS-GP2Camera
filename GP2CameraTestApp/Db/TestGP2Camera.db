@@ -33,33 +33,42 @@ record(waveform, "$(P)NSVDATA")
 #	field(TSE, -2)
 #}
 
-
-record(longout, "$(P)SAVE:SP")
+record(bo, "$(P)SAVE:SP")
 {
     field(DTYP, "asynInt32")
 	field(UDFS, "NO_ALARM")
     field(OUT,  "@asyn(nsv,0,0)Save")
+    field(SCAN, "Passive")
+	field(ZNAM, "OFF")
+	field(ONAM, "ON")
 }
 
-record(longin, "$(P)SAVE")
+record(bi, "$(P)SAVE")
 {
     field(DTYP, "asynInt32")
     field(INP,  "@asyn(nsv,0,0)Save")
     field(SCAN, "I/O Intr")
+	field(ZNAM, "OFF")
+	field(ONAM, "ON")
 }
 
-record(longout, "$(P)TRIGGERED:SP")
+record(bo, "$(P)TRIGGERED:SP")
 {
     field(DTYP, "asynInt32")
 	field(UDFS, "NO_ALARM")
     field(OUT,  "@asyn(nsv,0,0)Triggered")
+    field(SCAN, "Passive")
+	field(ZNAM, "OFF")
+	field(ONAM, "ON")
 }
 
-record(longin, "$(P)TRIGGERED")
+record(bi, "$(P)TRIGGERED")
 {
     field(DTYP, "asynInt32")
     field(INP,  "@asyn(nsv,0,0)Triggered")
     field(SCAN, "I/O Intr")
+	field(ZNAM, "OFF")
+	field(ONAM, "ON")
 }
 
 
