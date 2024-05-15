@@ -19,12 +19,15 @@ GP2Camera_SRCS += GP2CameraDriver.cpp
 
 GP2Camera_LIBS += asyn oncrpc utilities zlib pcrecpp pcre pugixml
 GP2Camera_LIBS += NetShrVar NetStreams
-GP2Camera_LIBS += ffmpegServer
-GP2Camera_LIBS += avdevice
-GP2Camera_LIBS += avformat
-GP2Camera_LIBS += avcodec
-GP2Camera_LIBS += avutil
-GP2Camera_LIBS += swscale
+
+## ffmpegserver
+#GP2Camera_LIBS += ffmpegServer
+#GP2Camera_LIBS += avdevice
+#GP2Camera_LIBS += avformat
+#GP2Camera_LIBS += avcodec
+#GP2Camera_LIBS += avutil
+#GP2Camera_LIBS += swscale
+
 GP2Camera_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 DBD += GP2Camera.dbd

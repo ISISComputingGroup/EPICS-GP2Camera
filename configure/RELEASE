@@ -22,7 +22,7 @@ UTILITIES=$(SUPPORT)/utilities/master
 ZLIB=$(SUPPORT)/zlib/master
 
 AREA_DETECTOR=$(SUPPORT)/areaDetector/master
-FFMPEGSERVER=$(AREA_DETECTOR)/ffmpegServer
+#FFMPEGSERVER=$(AREA_DETECTOR)/ffmpegServer
 
 # optional extra local definitions here
 -include $(TOP)/configure/RELEASE.private

@@ -26,7 +26,7 @@ $(APPNAME)_DBD += caPutLog.dbd
 $(APPNAME)_DBD += utilities.dbd
 ## add other dbd here ##
 $(APPNAME)_DBD += GP2Camera.dbd
-$(APPNAME)_DBD += ffmpegServer.dbd
+#$(APPNAME)_DBD += ffmpegServer.dbd
 $(APPNAME)_DBD += NetShrVar.dbd
 $(APPNAME)_DBD += NetStreams.dbd
 
@@ -43,12 +43,14 @@ $(APPNAME)_LIBS += utilities
 #$(APPNAME)_LIBS += xxx
 $(APPNAME)_LIBS += GP2Camera NetShrVar NetStreams
 $(APPNAME)_LIBS += busy asyn oncrpc zlib libjson pcrecpp pcre pugixml
-$(APPNAME)_LIBS += ffmpegServer
-$(APPNAME)_LIBS += avdevice
-$(APPNAME)_LIBS += avformat
-$(APPNAME)_LIBS += avcodec
-$(APPNAME)_LIBS += avutil
-$(APPNAME)_LIBS += swscale
+
+## ffmpegserver
+#$(APPNAME)_LIBS += ffmpegServer
+#$(APPNAME)_LIBS += avdevice
+#$(APPNAME)_LIBS += avformat
+#$(APPNAME)_LIBS += avcodec
+#$(APPNAME)_LIBS += avutil
+#$(APPNAME)_LIBS += swscale
 
 # isisdaeTest_registerRecordDeviceDriver.cpp derives from isisdaeTest.dbd
 $(APPNAME)_SRCS += $(APPNAME)_registerRecordDeviceDriver.cpp
